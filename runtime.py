@@ -148,7 +148,7 @@ def filter_generic(data_bin,f_opt,compare,f_arg):
     elif f_opt == "queue" and f_arg[0] == "shared":
         f_arg = q_shared
     elif f_opt == "queue" and f_arg[0] == "all":
-        f_arg = uniques['q']
+        f_arg = d_uniqs['q']
     for line in result:
         if pos_t == 'int':
             opt = int(line[pos_p])
