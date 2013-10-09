@@ -80,7 +80,7 @@ parser.add_argument('--csv', '-c',
                 dest='csv',
                 help='output in csv format')
 
-parser.add_argument('--quiet', '-q',
+parser.add_argument('--quiet',
                 action="store_true",
                 dest='quiet',
                 help='supress certain output')
