@@ -275,7 +275,10 @@ def loop_args(l_input,d_args):
     for opt,arg in d_args.iteritems():
         if arg and opt == "u":
             arg = arg.split(",")
-            l_filtered  = filter_generic(l_filtered,'user','eq',arg)
+            if len(arg) == 1 and arg[0] in d_uniq['u']:
+                l_filtered  = filter_generic(l_filtered,'user','eq',arg)
+            elif len(arg) == 1 and arg[0] not in d_uniq['u']:
+                exit("no records for user %s" % arg[0])
             #print len(l_filtered)
         elif arg and opt == "q":
             arg = arg.split(",")
