@@ -29,13 +29,15 @@ import os
 import sys
 #import pylab
 
-usage_info = 'usage: %s data_file.out' % sys.argv[0] 
+usage_info = '''usage: %s <options>
+        at a minimum, specify --infile <file.out>''' % sys.argv[0] 
 
 gc.disable()
 
 if len(sys.argv) <= 1:
     print usage_info
     exit()
+,
 parser = argparse.ArgumentParser(description=usage_info)
 
 parser.add_argument('--user', '-u',
@@ -64,6 +66,10 @@ parser.add_argument('--maxrun', '-x',
                 help='maximum runtime')
                    
 args = parser.parse_args()
+
+if args.infile and not os.path.isfile(args.infile):
+    print "%s isn't a file!" % args.infile
+    exit(1)
 
 d_pos = {
     'jobid':    [0,'int'],
@@ -223,9 +229,7 @@ def loop_args(l_input,d_args):
     return l_filtered
 
 d_args = args.__dict__
-print len(l_parsed)
 l_filtered = loop_args(l_parsed,d_args)
-print len(l_filtered)
 
 l_result    = calc(l_filtered)
 n_jobs      = len(l_result[0])
