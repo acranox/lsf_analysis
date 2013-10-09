@@ -40,15 +40,15 @@ if len(sys.argv) <= 1:
 
 parser = argparse.ArgumentParser(description=usage_info)
 
-parser.add_argument('--user', '-u',
+parser.add_argument('--users', '-u',
                 type=str,
                 dest='u',
-                help='The user id to look for')
+                help='The user ids to look for(comma separated list)')
 
-parser.add_argument('--queue', '-q',
+parser.add_argument('--queues', '-q',
                 type=str,
                 dest='q',
-                help='The queue to look for')
+                help='The queue to look for(comma separated list)')
 
 parser.add_argument('--infile', '-i',
                 type=str,
@@ -64,12 +64,33 @@ parser.add_argument('--maxrun', '-x',
                 type=int,
                 dest='maxrun',
                 help='maximum runtime')
-                   
+
+parser.add_argument('--nonzeroexit', '-z',
+                action="store_true",
+                dest='nonzeroexit',
+                help='only show jobs with non-zero exit codes')
+
+parser.add_argument('--showgraphs', '-g',
+                action="store_true",
+                dest='showgraphs',
+                help='show graphs')
+
+parser.add_argument('--csv', '-c',
+                action="store_true",
+                dest='csv',
+                help='output in csv format')
+
+
 args = parser.parse_args()
 
 if args.infile and not os.path.isfile(args.infile):
     print "%s isn't a file!" % args.infile
     exit(1)
+
+# Queue definitions
+q_contrib   = ['church_int_15m','danuser_int_15m','freedberg_int_15m','i2b2_int_15m','megason_int_15m','merfeld_int_15m','nezafat_int_15m','nowak_int_15m','park_int_15m','sorger_int_15m','sysbio_int_15m','usheva_int_15m','church_int_2h','danuser_int_2h','freedberg_int_2h','i2b2_int_2h','kreiman_int_2h','megason_int_2h','merfeld_int_2h','nezafat_int_2h','nowak_int_2h','park_int_2h','sorger_int_2h','sysbio_int_2h','usheva_int_2h','bpf_int_12h','cbi_int_12h','church_int_12h','danuser_int_7d','danuser_int_12h','freedberg_int_12h','i2b2_int_12h','kreiman_int_12h','megason_int_12h','merfeld_int_12h','nezafat_int_12h','nowak_int_12h','park_int_12h','sorger_int_2d','sysbio_int_2d','usheva_int_12h','bpf_15m','church_15m','danuser_15m','freedberg_15m','i2b2_15m','kreiman_15m','megason_15m','merfeld_15m','nezafat_15m','nowak_15m','park_15m','sorger_15m','sysbio_15m','usheva_15m','church_2h','danuser_2h','freedberg_2h','i2b2_2h','kreiman_2h','megason_2h','merfeld_2h','nezafat_2h','nowak_2h','park_2h','sorger_2h','sysbio_2h','usheva_2h','bpf_12h','cbi_12h','church_12h','danuser_12h','freedberg_12h','i2b2_12h','kreiman_12h','megason_12h','merfeld_12h','nezafat_12h','nowak_12h','park_12h','sorger_12h','sysbio_12h','usheva_12h','church_1d','danuser_1d','freedberg_1d','i2b2_1d','kreiman_1d','megason_1d','merfeld_1d','nezafat_1d','nowak_1d','park_1d','sorger_1d','sysbio_1d','usheva_1d','church_7d','danuser_7d','freedberg_7d','i2b2_7d','megason_7d','merfeld_7d','nezafat_7d','nowak_7d','park_7d','sorger_7d','sysbio_7d','usheva_7d','bpf_unlimited','cbi_unlimited','church_unlimited','danuser_unlimited','freedberg_unlimited','i2b2_unlimited','kreiman_unlimited','megason_unlimited','merfeld_unlimited','nezafat_unlimited','nowak_unlimited','park_unlimited','sorger_unlimited','sorger_par_unlimited','sorger_par_1d','sysbio_unlimited','sysbio_par_1d','usheva_unlimited','rodeo_15m','rodeo_12h','rodeo_unlimited','reich','seidman']
+q_shared    = ['priority','interactive','mpi','mcore','parallel','short','long','mini']
+q_all       = q_contrib+q_shared 
 
 d_pos = {
     'jobid':    [0,'int'],
@@ -122,6 +143,12 @@ def filter_generic(data_bin,f_opt,compare,f_arg):
     result      = data_bin
     pos_p       = d_pos[f_opt][0]
     pos_t       = d_pos[f_opt][1]
+    if f_opt == "queue" and f_arg[0] == "contrib":
+        f_arg = q_contrib
+    elif f_opt == "queue" and f_arg[0] == "shared":
+        f_arg = q_shared
+    elif f_opt == "queue" and f_arg[0] == "all":
+        f_arg = uniques['q']
     for line in result:
         if pos_t == 'int':
             opt = int(line[pos_p])
@@ -134,6 +161,9 @@ def filter_generic(data_bin,f_opt,compare,f_arg):
         elif compare == 'max':
             if opt <= f_arg:
                 databin.append(line)
+        elif compare == 'noteq':
+            if opt != 0:
+                databin.append(line)
         elif compare == 'eq':
             if isinstance(f_arg, list):
                 if opt in f_arg:
@@ -142,6 +172,25 @@ def filter_generic(data_bin,f_opt,compare,f_arg):
                 if opt == f_arg:
                     databin.append(line)
     return databin
+
+def find_uniques(data_bin):
+    ''' A function for getting all the user names and queues present in the file
+        and creating a dictionary with the values, using the keys "u" and "q" '''
+    uniques         = {}
+    u_list          = []
+    q_list          = []
+    for row in data_bin:
+        username    = row[1]
+        queue       = row[3]
+
+        u_list.append(username)
+        q_list.append(queue)
+
+    uniques['u'] = list(set(u_list))
+    uniques['q'] = list(set(q_list))
+
+    return uniques
+
 
 def filter_q(data_bin,q):
     q_databin   = []
@@ -208,13 +257,13 @@ def calc(data_bin):
     
         l_cpu.append(c_used)
         l_r.append(run_t)
-        l_mrsv.append(m_rsv)
+        l_mrsv.append(m_rsv*n_cpu)
         l_mused.append(m_used/1024)
         l_ncpu.append(n_cpu)
     return l_cpu, l_r, l_mrsv, l_mused, l_ncpu
 
 l_parsed    = create_list(args.infile)
-#l_filter    = filter_list(l_parsed,args)
+d_uniq      = find_uniques(l_parsed)
 
 def loop_args(l_input,d_args):
     l_filtered  = l_input 
@@ -227,6 +276,8 @@ def loop_args(l_input,d_args):
             arg = arg.split(",")
             l_filtered  = filter_generic(l_filtered,'queue','eq',arg)
             #print len(l_filtered)
+        elif arg and opt == "nonzeroexit":
+            l_filtered  = filter_generic(l_filtered,'exit','noteq',arg)
         elif arg and opt == "minrun":
             l_filtered  = filter_generic(l_filtered,'run_t','min',arg)
             #print len(l_filtered)
@@ -236,18 +287,26 @@ def loop_args(l_input,d_args):
     return l_filtered
 
 d_args = args.__dict__
+#print d_args
 l_filtered = loop_args(l_parsed,d_args)
 
 l_result    = calc(l_filtered)
 n_jobs      = len(l_result[0])
 c_total     = sum(l_result[0])/3600.0 
 
-if args.u and args.q:
-    print "%s queue, user %s: %0.1f cpu hours and %d jobs" % (args.q,args.u,c_total,n_jobs)
-elif args.u and not args.q:
-    print "user %s: %0.1f cpu hours and %d jobs" % (args.u,c_total,n_jobs)
-elif not args.u and args.q:
-    print "%s queue: %0.1f cpu hours and %d jobs" % (args.q,c_total,n_jobs)
+if not args.csv:
+    if args.u and args.q:
+        print "queues: %s\nusers: %s\n%0.1f cpu hours and %d jobs" % (args.q,args.u,c_total,n_jobs)
+    elif args.u and not args.q:
+        print "users: %s\n%0.1f cpu hours and %d jobs" % (args.u,c_total,n_jobs)
+    elif not args.u and args.q:
+        print "queues: %s\n%0.1f cpu hours and %d jobs" % (args.q,c_total,n_jobs)
+    elif not args.u and not args.q:
+        print "all users all queues:\n%0.1f cpu hours and %d jobs" % (c_total,n_jobs)
+elif args.csv:
+    print "cpu_hours,numjobs"
+    print "%0.1f,%d" % (c_total,n_jobs)
+
 
 def hist_cused(l_input):
     plt.figure(0)
@@ -298,10 +357,10 @@ def hist_mused(l_input):
     plt.draw()
 
 
-
-hist_cused(l_result[0])
-hist_runt(l_result[1])
-hist_mrsv(l_result[2])
-hist_mused(l_result[3])
-hist_ncpu(l_result[4])
-plt.show()
+if args.showgraphs:
+    hist_cused(l_result[0])
+    hist_runt(l_result[1])
+    hist_mrsv(l_result[2])
+    hist_mused(l_result[3])
+    hist_ncpu(l_result[4])
+    plt.show()
