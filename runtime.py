@@ -127,20 +127,21 @@ def filter_generic(data_bin,f_opt,compare,f_arg):
             opt = int(line[pos_p])
         elif pos_t == 'str':
             opt = str(line[pos_p])
+
         if compare == 'min':
             if opt >= f_arg:
                 databin.append(line)
         elif compare == 'max':
             if opt <= f_arg:
                 databin.append(line)
-        if compare == 'eq':
+        elif compare == 'eq':
             if isinstance(f_arg, list):
                 if opt in f_arg:
                     databin.append(line)
             elif isinstance(f_arg, str):
                 if opt == f_arg:
                     databin.append(line)
-        return databin
+    return databin
 
 def filter_q(data_bin,q):
     q_databin   = []
@@ -221,17 +222,17 @@ def loop_args(l_input,d_args):
         if arg and opt == "u":
             arg = arg.split(",")
             l_filtered  = filter_generic(l_filtered,'user','eq',arg)
-            print len(l_filtered)
+            #print len(l_filtered)
         elif arg and opt == "q":
             arg = arg.split(",")
             l_filtered  = filter_generic(l_filtered,'queue','eq',arg)
-            print len(l_filtered)
+            #print len(l_filtered)
         elif arg and opt == "minrun":
             l_filtered  = filter_generic(l_filtered,'run_t','min',arg)
-            print len(l_filtered)
+            #print len(l_filtered)
         elif arg and opt == "maxrun":
             l_filtered  = filter_generic(l_filtered,'run_t','max',arg)
-            print len(l_filtered)
+            #print len(l_filtered)
     return l_filtered
 
 d_args = args.__dict__
