@@ -37,7 +37,7 @@ gc.disable()
 if len(sys.argv) <= 1:
     print usage_info
     exit()
-,
+
 parser = argparse.ArgumentParser(description=usage_info)
 
 parser.add_argument('--user', '-u',
@@ -134,9 +134,13 @@ def filter_generic(data_bin,f_opt,compare,f_arg):
             if opt <= f_arg:
                 databin.append(line)
         if compare == 'eq':
-            if opt == f_arg:
-                databin.append(line)
-    return databin
+            if isinstance(f_arg, list):
+                if opt in f_arg:
+                    databin.append(line)
+            elif isinstance(f_arg, str):
+                if opt == f_arg:
+                    databin.append(line)
+        return databin
 
 def filter_q(data_bin,q):
     q_databin   = []
@@ -215,9 +219,11 @@ def loop_args(l_input,d_args):
     l_filtered  = l_input 
     for opt,arg in d_args.iteritems():
         if arg and opt == "u":
+            arg = arg.split(",")
             l_filtered  = filter_generic(l_filtered,'user','eq',arg)
             print len(l_filtered)
         elif arg and opt == "q":
+            arg = arg.split(",")
             l_filtered  = filter_generic(l_filtered,'queue','eq',arg)
             print len(l_filtered)
         elif arg and opt == "minrun":
