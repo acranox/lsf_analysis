@@ -32,7 +32,7 @@ import sys
 usage_info = '''usage: %s <options>
         at a minimum, specify --infile <file.out>''' % sys.argv[0] 
 
-gc.disable()
+#gc.disable()
 
 if len(sys.argv) <= 1:
     print usage_info
@@ -79,6 +79,11 @@ parser.add_argument('--csv', '-c',
                 action="store_true",
                 dest='csv',
                 help='output in csv format')
+
+parser.add_argument('--quiet', '-q',
+                action="store_true",
+                dest='quiet',
+                help='supress certain output')
 
 
 args = parser.parse_args()
@@ -304,7 +309,8 @@ if not args.csv:
     elif not args.u and not args.q:
         print "all users all queues:\n%0.1f cpu hours and %d jobs" % (c_total,n_jobs)
 elif args.csv:
-    print "cpu_hours,numjobs"
+    if not args.quiet:
+        print "cpu_hours,numjobs"
     print "%0.1f,%d" % (c_total,n_jobs)
 
 
