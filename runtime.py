@@ -270,29 +270,6 @@ def loop_args(l_input,d_args):
 #            d_results['jobs'].append(l_filtered)
     return d_results
 
-def print_results(d_results):
-    if not args.csv:
-        for user in d_filtered['newu_list']:
-            l_result    = calc(d_filtered[user])
-            n_jobs      = len(l_result[0])
-            c_total     = sum(l_result[0])/3600.0 
-            if args.u and args.q:
-                print "queues: %s\nusers: %s\n%0.1f cpu hours and %d jobs" % (args.q,user,c_total,n_jobs)
-            elif args.u and not args.q:
-                print "users: %s\n%0.1f cpu hours and %d jobs" % (user,c_total,n_jobs)
-            elif not args.u and args.q:
-                print "queues: %s\n%0.1f cpu hours and %d jobs" % (args.q,c_total,n_jobs)
-            elif not args.u and not args.q:
-                print "all users all queues:\n%0.1f cpu hours and %d jobs" % (c_total,n_jobs)
-    elif args.csv:
-        print "user,cpu_hours,numjobs"
-        for user in d_filtered['newu_list']:
-            l_result    = calc(d_filtered[user])
-            n_jobs      = len(l_result[0])
-            c_total     = sum(l_result[0])/3600.0 
-#        if not args.quiet:
-            print "%s,%0.1f,%d" % (user,c_total,n_jobs)
-
 def create_dict(l_parsed):
     q_dict  = {}
     u_dict  = {}
@@ -310,11 +287,26 @@ def create_dict(l_parsed):
     return q_dict, u_dict
 
 def new_print_results(d_results):
+    users_total = []
+    if not args.csv:
+        for user in d_results.keys():
+            l_result    = calc(d_results[user])
+            n_jobs      = len(l_result[0])
+            c_total     = sum(l_result[0])/3600.0 
+            print "users: %s\n%0.1f cpu hours and %d jobs" % (user,c_total,n_jobs)
+    elif args.csv:
+        print "user,cpu_hours,numjobs"
+        for user in d_results.keys():
+            l_result    = calc(d_results[user])
+            n_jobs      = len(l_result[0])
+            c_total     = sum(l_result[0])/3600.0 
+            print "%s,%0.1f,%d" % (user,c_total,n_jobs)
     for user in d_results.keys():
-        l_result    = calc(d_results[user])
-        n_jobs      = len(l_result[0])
-        c_total     = sum(l_result[0])/3600.0 
-        print "users: %s\n%0.1f cpu hours and %d jobs" % (user,c_total,n_jobs)
+        users_total.extend(d_results[user])
+    l_result    = calc(users_total)
+    n_jobs      = len(l_result[0])
+    c_total     = sum(l_result[0])/3600.0
+    print "total,%0.1f,%d" % (c_total,n_jobs)
 
 
 l_parsed    = create_list(args.infile)
