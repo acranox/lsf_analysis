@@ -291,59 +291,58 @@ mrg_u_result    = calc(u_merged)
 if not args.quiet:
     new_print_results(u_dict,mrg_u_result)
 
-def hist_cused(l_input):
-    plt.figure(0)
-    plt.ylabel('number of jobs')
-    plt.xlabel('cpu usage (sec)')
+def draw_hist(l_input):
+    fignum  = l_input[0]
+    figylab = l_input[1]
+    figxlab = l_input[2]
+    figtit  = '%s - (source: %s)\nFilters: %s' % (l_input[3],args.infile, filter_names)
+    figdata = l_input[4]
+    figbins = l_input[5]
+    plt.figure(fignum)
+    plt.ylabel(figylab)
+    plt.xlabel(figxlab)
     plt.grid(True)
-    plt.suptitle(args.infile)
-    plt.hist(l_input, bins=[0,60,3600,14400,43200,86400,604800,2592000])
-#    plt.hist(l_input)
+    plt.suptitle(figtit)
+    if figbins == "auto":    
+        plt.hist(figdata, bins==len(set(figdata)))
+    elif figbins and figbins != "auto":    
+        plt.hist(figdata, bins=figbins)
+    elif not figbins:
+        plt.hist(figdata)
     plt.draw()
 
-def hist_ncpu(l_input):
-    plt.figure(1)
-    plt.ylabel('number of jobs')
-    plt.xlabel('number of cores reserved')
-    plt.grid(True)
-    plt.suptitle(args.infile)
-    plt.hist(l_input, bins=[1,2,4,8,12,50])
-    plt.draw()
+d_figs = {
+    'c_used': [0,'Number of Jobs','CPU Usage (sec per job)','Histogram of CPU Usage',mrg_u_result[0],[0,60,3600,14400,43200,86400,604800,2592000]],
+    'run_t': [1,'Number of Jobs','Wall Clock Time (sec per job)','Histogram of Job Run Times',mrg_u_result[1],None],
+    'mrsv': [2,'Number of Jobs','Memory Reserved (MB per core)','Histogram of Memory Reservations',mrg_u_result[2],[512,2048,4096,8192,32768,65536]],
+    'mused': [3,'Number of Jobs','Memory Used (MB per job)','Histogram of Memory Usage',mrg_u_result[3],[512,2048,4096,8192,32768,65536]],
+    'ncpu': [4,'Number of Jobs','Number of Cores Reserved','Histogram of Core Reservation',mrg_u_result[4],[1,2,4,8,12,50]]
+    }
 
-def hist_runt(l_input):
-    plt.figure(2)
-    plt.ylabel('number of jobs')
-    plt.xlabel('run time (sec)')
-    plt.grid(True)
-    plt.suptitle(args.infile)
-    plt.hist(l_input)
-    plt.draw()
+def filter_string(d_args):
+    l_args = []
+    if d_args['q']:
+        l_args.append('Queues: %s' % d_args['q'])
+    if d_args['u']:
+        l_args.append('Users: %s' % d_args['u'])
+    if d_args['minrun']:
+        l_args.append('Min. Runtime: %s' % d_args['minrun'])
+    if d_args['maxrun']:
+        l_args.append('Max. Runtime: %s' % d_args['maxrun'])
+    if d_args['exitzero']:
+        l_args.append('Exclude Non-Zero exit values')
+    if len(l_args) == 0:
+        s_filter = "None"
+    else:
+        s_filter = ", ".join(l_args)
+    return s_filter 
 
-def hist_mrsv(l_input):
-    plt.figure(3)
-    plt.ylabel('number of jobs')
-    plt.xlabel('memory reservation (mb)')
-    plt.grid(True)
-    plt.suptitle(args.infile)
-#    plt.hist(l_input, bins=[2048,4096,8192,32768,65536])
-    plt.hist(l_input, bins=len(set(l_input)))
-    plt.draw()
-
-def hist_mused(l_input):
-    plt.figure(4)
-    plt.ylabel('number of jobs')
-    plt.xlabel('memory used (mb)')
-    plt.grid(True)
-    plt.suptitle(args.infile)
-    plt.hist(l_input, bins=[512,2048,4096,8192,32768,65536])
-#    plt.hist(l_input, bins=len(set(l_input)))
-    plt.draw()
-
+filter_names = filter_string(d_args)
 
 if args.showgraphs:
-    hist_cused(mrg_u_result[0])
-    hist_runt(mrg_u_result[1])
-    hist_mrsv(mrg_u_result[2])
-    hist_mused(mrg_u_result[3])
-    hist_ncpu(mrg_u_result[4])
+    draw_hist(d_figs['c_used'])
+    draw_hist(d_figs['run_t'])
+    draw_hist(d_figs['mrsv'])
+    draw_hist(d_figs['mused'])
+    draw_hist(d_figs['ncpu'])
     plt.show()
