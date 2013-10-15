@@ -73,15 +73,20 @@ parser.add_argument('--sumusers',
                 dest='sumusers',
                 help='if set, a sum total is calculated for the list of users, instead of processing them individually')
 
-parser.add_argument('--showgraphs', '-g',
+parser.add_argument('--graphs', '-g',
                 type=str,
-                dest='showgraphs',
-                help='''Is one of: all, run_t, ncpu, mrsv, c_used, memdelta, eff, mused''')
+                dest='makegraphs',
+                help='''Is one of: all, run_time, ncpu, mem_reserved, cpu_usage, memdelta, eff, mem_used''')
 
 parser.add_argument('--savegraphs',
                 action="store_true",
                 dest='savegraphs',
                 help='save graphs')
+
+parser.add_argument('--showgraphs',
+                action="store_true",
+                dest='showgraphs',
+                help='show graphs')
 
 parser.add_argument('--csv', '-c',
                 action="store_true",
@@ -335,10 +340,10 @@ def draw_hist(l_input,save):
         plt.savefig(figfile)
 
 d_figs = {
-    'c_used': [0,'cpu_usage','Number of Jobs','CPU Usage (sec per job)','Histogram of CPU Usage',mrg_u_result['l_cpu'],[0,60,3600,14400,43200,86400,604800,2592000]],
-    'run_t': [1,'run_time','Number of Jobs','Wall Clock Time (sec per job)','Histogram of Job Run Times',mrg_u_result['l_r'],None],
-    'mrsv': [2,'mem_reserved','Number of Jobs','Memory Reserved (MB per core)','Histogram of Memory Reservations',mrg_u_result['l_mrsv'],[512,2048,4096,8192,32768,65536]],
-    'mused': [3,'mem_used','Number of Jobs','Memory Used (MB per job)','Histogram of Memory Usage',mrg_u_result['l_mused'],[512,2048,4096,8192,32768,65536]],
+    'cpu_usage': [0,'cpu_usage','Number of Jobs','CPU Usage (sec per job)','Histogram of CPU Usage',mrg_u_result['l_cpu'],[0,60,3600,14400,43200,86400,604800,2592000]],
+    'run_time': [1,'run_time','Number of Jobs','Wall Clock Time (sec per job)','Histogram of Job Run Times',mrg_u_result['l_r'],None],
+    'mem_reserved': [2,'mem_reserved','Number of Jobs','Memory Reserved (MB per core)','Histogram of Memory Reservations',mrg_u_result['l_mrsv'],[512,2048,4096,8192,32768,65536]],
+    'mem_used': [3,'mem_used','Number of Jobs','Memory Used (MB per job)','Histogram of Memory Usage',mrg_u_result['l_mused'],[512,2048,4096,8192,32768,65536]],
     'ncpu': [4,'number_cores','Number of Jobs','Number of Cores Reserved','Histogram of Core Reservation',mrg_u_result['l_ncpu'],[1,2,4,8,12,50]],
     'eff': [5,'efficiency','Number of Jobs','Job Efficiency ((CPU Usage*Cores)/RunTime)','Histogram of Job Efficiency',mrg_u_result['l_eff'],[0,10,20,30,40,50,60,70,80,90,100,200,400]],
     'memdelta': [6,'mem_delta','Number of Jobs','(Mem. Reserved) - (Mem. Used)','Histogram of Memory Efficiency',mrg_u_result['l_memdelta'],[-8192,-1024,0,1024,2048,8192,16384,32768,65536]]
@@ -346,17 +351,20 @@ d_figs = {
 
 filter_names = filter_string(d_args)
 
-if args.showgraphs or args.savegraphs:
+if args.showgraphs or args.savegraphs or args.makegraphs:
     if args.savegraphs and not args.showgraphs:
         import matplotlib
         matplotlib.use("agg")
     import matplotlib.pyplot as plt
-    if args.showgraphs == "all":
+    if args.makegraphs == "all" or not args.makegraphs:
         l_graph = d_figs.keys()
     else:
-        l_graph = args.showgraphs.split(",")
+        l_graph = args.makegraphs.split(",")
     for graph in l_graph:
         draw_hist(d_figs[graph],args.savegraphs)
+    if args.showgraphs or args.makegraphs:
+        plt.show()
+
 
 #    draw_hist(d_figs['c_used'],args.savegraphs)
 #    draw_hist(d_figs['run_t'],args.savegraphs)
@@ -365,6 +373,3 @@ if args.showgraphs or args.savegraphs:
 #    draw_hist(d_figs['ncpu'],args.savegraphs)
 #    draw_hist(d_figs['eff'],args.savegraphs)
 #    draw_hist(d_figs['memdelta'],args.savegraphs)
-    if args.showgraphs:
-        plt.show()
-
