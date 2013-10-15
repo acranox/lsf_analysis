@@ -209,11 +209,7 @@ def find_uniques(data_bin):
 
 def calc(data_bin):
     result      = data_bin
-    l_cpu       = []
-    l_r         = []
-    l_mrsv      = []
-    l_mused     = []
-    l_ncpu      = []
+    d_calc      = {'l_cpu': [], 'l_r':[], 'l_mrsv': [], 'l_mused': [], 'l_ncpu': [], 'l_eff': [], 'l_memdelta': [] }
     for line in result:
 #        jid     = line[0]
         u       = line[1]
@@ -222,7 +218,7 @@ def calc(data_bin):
         m_used  = makeintorzero(line[4])
         m_rsv   = mungemrsv(int(line[5]))
         c_used  = float(line[6])
-#        eff     = line[7]
+        eff     = int(float(line[7]))
         n_cpu   = int(line[8])
 #        pend_t  = line[9]
 #        psusp_t = line[10]
@@ -232,13 +228,14 @@ def calc(data_bin):
 #        ssusp_t = line[13]
 #        unk_t   = line[14]
 #        dep     = line[15]
-    
-        l_cpu.append(c_used)
-        l_r.append(run_t)
-        l_mrsv.append(m_rsv*n_cpu)
-        l_mused.append(m_used/1024)
-        l_ncpu.append(n_cpu)
-    return l_cpu, l_r, l_mrsv, l_mused, l_ncpu
+        d_calc['l_cpu'].append(c_used)
+        d_calc['l_r'].append(run_t)
+        d_calc['l_mrsv'].append(m_rsv*n_cpu)
+        d_calc['l_mused'].append(m_used/1024)
+        d_calc['l_ncpu'].append(n_cpu)
+        d_calc['l_eff'].append(eff)
+        d_calc['l_memdelta'].append(m_rsv-m_used)
+    return d_calc
 
 def create_dict(l_parsed):
     q_dict  = {}
@@ -261,19 +258,19 @@ def new_print_results(d_results,lu_merged):
     if not args.csv:
         for user in d_results.keys():
             l_result    = calc(d_results[user])
-            n_jobs      = len(l_result[0])
-            c_total     = sum(l_result[0])/3600.0 
+            n_jobs      = len(l_result['l_cpu'])
+            c_total     = sum(l_result['l_cpu'])/3600.0 
             print "users: %s\n%0.1f cpu hours and %d jobs" % (user,c_total,n_jobs)
     elif args.csv:
         print "user,cpu_hours,numjobs"
         for user in d_results.keys():
             l_result    = calc(d_results[user])
-            n_jobs      = len(l_result[0])
-            c_total     = sum(l_result[0])/3600.0 
+            n_jobs      = len(l_result['l_cpu'])
+            c_total     = sum(l_result['l_cpu'])/3600.0 
             print "%s,%0.1f,%d" % (user,c_total,n_jobs)
     l_result    = lu_merged
-    n_jobs      = len(l_result[0])
-    c_total     = sum(l_result[0])/3600.0
+    n_jobs      = len(l_result['l_cpu'])
+    c_total     = sum(l_result['l_cpu'])/3600.0
     print "total,%0.1f,%d" % (c_total,n_jobs)
 
 
@@ -304,7 +301,7 @@ def draw_hist(l_input):
     plt.grid(True)
     plt.suptitle(figtit)
     if figbins == "auto":    
-        plt.hist(figdata, bins==len(set(figdata)))
+        plt.hist(figdata, bins=len(set(figdata)))
     elif figbins and figbins != "auto":    
         plt.hist(figdata, bins=figbins)
     elif not figbins:
@@ -312,11 +309,13 @@ def draw_hist(l_input):
     plt.draw()
 
 d_figs = {
-    'c_used': [0,'Number of Jobs','CPU Usage (sec per job)','Histogram of CPU Usage',mrg_u_result[0],[0,60,3600,14400,43200,86400,604800,2592000]],
-    'run_t': [1,'Number of Jobs','Wall Clock Time (sec per job)','Histogram of Job Run Times',mrg_u_result[1],None],
-    'mrsv': [2,'Number of Jobs','Memory Reserved (MB per core)','Histogram of Memory Reservations',mrg_u_result[2],[512,2048,4096,8192,32768,65536]],
-    'mused': [3,'Number of Jobs','Memory Used (MB per job)','Histogram of Memory Usage',mrg_u_result[3],[512,2048,4096,8192,32768,65536]],
-    'ncpu': [4,'Number of Jobs','Number of Cores Reserved','Histogram of Core Reservation',mrg_u_result[4],[1,2,4,8,12,50]]
+    'c_used': [0,'Number of Jobs','CPU Usage (sec per job)','Histogram of CPU Usage',mrg_u_result['l_cpu'],[0,60,3600,14400,43200,86400,604800,2592000]],
+    'run_t': [1,'Number of Jobs','Wall Clock Time (sec per job)','Histogram of Job Run Times',mrg_u_result['l_r'],None],
+    'mrsv': [2,'Number of Jobs','Memory Reserved (MB per core)','Histogram of Memory Reservations',mrg_u_result['l_mrsv'],[512,2048,4096,8192,32768,65536]],
+    'mused': [3,'Number of Jobs','Memory Used (MB per job)','Histogram of Memory Usage',mrg_u_result['l_mused'],[512,2048,4096,8192,32768,65536]],
+    'ncpu': [4,'Number of Jobs','Number of Cores Reserved','Histogram of Core Reservation',mrg_u_result['l_ncpu'],[1,2,4,8,12,50]],
+    'eff': [5,'Number of Jobs','Job Efficiency ((CPU Usage*Cores)/RunTime)','Histogram of Job Efficiency',mrg_u_result['l_eff'],[0,10,20,30,40,50,60,70,80,90,100,200,400]],
+    'memdelta': [6,'Number of Jobs','(Mem. Reserved) - (Mem. Used)','Histogram of Memory Efficiency',mrg_u_result['l_memdelta'],[-8192,-1024,0,1024,2048,8192,16384,32768,65536]]
     }
 
 def filter_string(d_args):
@@ -345,4 +344,6 @@ if args.showgraphs:
     draw_hist(d_figs['mrsv'])
     draw_hist(d_figs['mused'])
     draw_hist(d_figs['ncpu'])
+    draw_hist(d_figs['eff'])
+    draw_hist(d_figs['memdelta'])
     plt.show()
