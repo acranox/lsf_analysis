@@ -24,7 +24,6 @@
 import argparse
 import gc
 import math
-import matplotlib.pyplot as plt
 import os
 import sys
 
@@ -242,6 +241,25 @@ def calc(data_bin):
         d_calc['l_memdelta'].append(m_rsv-m_used)
     return d_calc
 
+def filter_string(argdict):
+    l_args = []
+    if argdict['q']:
+        l_args.append('Queues: %s' % argdict['q'])
+    if argdict['u']:
+        l_args.append('Users: %s' % argdict['u'])
+    if argdict['minrun']:
+        l_args.append('Min. Runtime: %s' % argdict['minrun'])
+    if argdict['maxrun']:
+        l_args.append('Max. Runtime: %s' % argdict['maxrun'])
+    if argdict['exitzero']:
+        l_args.append('Exclude Non-Zero exit values')
+    if len(l_args) == 0:
+        s_filter = "None"
+    else:
+        s_filter = ", ".join(l_args)
+    return s_filter 
+
+
 def create_dict(l_parsed):
     q_dict  = {}
     u_dict  = {}
@@ -326,27 +344,13 @@ d_figs = {
     'memdelta': [6,'mem_delta','Number of Jobs','(Mem. Reserved) - (Mem. Used)','Histogram of Memory Efficiency',mrg_u_result['l_memdelta'],[-8192,-1024,0,1024,2048,8192,16384,32768,65536]]
     }
 
-def filter_string(d_args):
-    l_args = []
-    if d_args['q']:
-        l_args.append('Queues: %s' % d_args['q'])
-    if d_args['u']:
-        l_args.append('Users: %s' % d_args['u'])
-    if d_args['minrun']:
-        l_args.append('Min. Runtime: %s' % d_args['minrun'])
-    if d_args['maxrun']:
-        l_args.append('Max. Runtime: %s' % d_args['maxrun'])
-    if d_args['exitzero']:
-        l_args.append('Exclude Non-Zero exit values')
-    if len(l_args) == 0:
-        s_filter = "None"
-    else:
-        s_filter = ", ".join(l_args)
-    return s_filter 
-
 filter_names = filter_string(d_args)
 
 if args.showgraphs or args.savegraphs:
+    if args.savegraphs and not args.showgraphs:
+        import matplotlib
+        matplotlib.use("agg")
+    import matplotlib.pyplot as plt
     draw_hist(d_figs['c_used'],args.savegraphs)
     draw_hist(d_figs['run_t'],args.savegraphs)
     draw_hist(d_figs['mrsv'],args.savegraphs)
