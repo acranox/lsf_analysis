@@ -74,9 +74,9 @@ parser.add_argument('--sumusers',
                 help='if set, a sum total is calculated for the list of users, instead of processing them individually')
 
 parser.add_argument('--showgraphs', '-g',
-                action="store_true",
+                type=str,
                 dest='showgraphs',
-                help='show graphs')
+                help='''Is one of: all, run_t, ncpu, mrsv, c_used, memdelta, eff, mused''')
 
 parser.add_argument('--savegraphs',
                 action="store_true",
@@ -351,13 +351,20 @@ if args.showgraphs or args.savegraphs:
         import matplotlib
         matplotlib.use("agg")
     import matplotlib.pyplot as plt
-    draw_hist(d_figs['c_used'],args.savegraphs)
-    draw_hist(d_figs['run_t'],args.savegraphs)
-    draw_hist(d_figs['mrsv'],args.savegraphs)
-    draw_hist(d_figs['mused'],args.savegraphs)
-    draw_hist(d_figs['ncpu'],args.savegraphs)
-    draw_hist(d_figs['eff'],args.savegraphs)
-    draw_hist(d_figs['memdelta'],args.savegraphs)
+    if args.showgraphs == "all":
+        l_graph = d_figs.keys()
+    else:
+        l_graph = args.showgraphs.split(",")
+    for graph in l_graph:
+        draw_hist(d_figs[graph],args.savegraphs)
+
+#    draw_hist(d_figs['c_used'],args.savegraphs)
+#    draw_hist(d_figs['run_t'],args.savegraphs)
+#    draw_hist(d_figs['mrsv'],args.savegraphs)
+#    draw_hist(d_figs['mused'],args.savegraphs)
+#    draw_hist(d_figs['ncpu'],args.savegraphs)
+#    draw_hist(d_figs['eff'],args.savegraphs)
+#    draw_hist(d_figs['memdelta'],args.savegraphs)
     if args.showgraphs:
         plt.show()
 
