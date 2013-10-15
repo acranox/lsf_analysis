@@ -79,6 +79,11 @@ parser.add_argument('--showgraphs', '-g',
                 dest='showgraphs',
                 help='show graphs')
 
+parser.add_argument('--savegraphs',
+                action="store_true",
+                dest='savegraphs',
+                help='save graphs')
+
 parser.add_argument('--csv', '-c',
                 action="store_true",
                 dest='csv',
@@ -288,13 +293,14 @@ mrg_u_result    = calc(u_merged)
 if not args.quiet:
     new_print_results(u_dict,mrg_u_result)
 
-def draw_hist(l_input):
+def draw_hist(l_input,save):
     fignum  = l_input[0]
-    figylab = l_input[1]
-    figxlab = l_input[2]
-    figtit  = '%s - (source: %s)\nFilters: %s' % (l_input[3],args.infile, filter_names)
-    figdata = l_input[4]
-    figbins = l_input[5]
+    figfile = '%s.png' % l_input[1]
+    figylab = l_input[2]
+    figxlab = l_input[3]
+    figtit  = '%s - (source: %s)\nFilters: %s' % (l_input[4],args.infile, filter_names)
+    figdata = l_input[5]
+    figbins = l_input[6]
     plt.figure(fignum)
     plt.ylabel(figylab)
     plt.xlabel(figxlab)
@@ -307,15 +313,17 @@ def draw_hist(l_input):
     elif not figbins:
         plt.hist(figdata)
     plt.draw()
+    if save:
+        plt.savefig(figfile)
 
 d_figs = {
-    'c_used': [0,'Number of Jobs','CPU Usage (sec per job)','Histogram of CPU Usage',mrg_u_result['l_cpu'],[0,60,3600,14400,43200,86400,604800,2592000]],
-    'run_t': [1,'Number of Jobs','Wall Clock Time (sec per job)','Histogram of Job Run Times',mrg_u_result['l_r'],None],
-    'mrsv': [2,'Number of Jobs','Memory Reserved (MB per core)','Histogram of Memory Reservations',mrg_u_result['l_mrsv'],[512,2048,4096,8192,32768,65536]],
-    'mused': [3,'Number of Jobs','Memory Used (MB per job)','Histogram of Memory Usage',mrg_u_result['l_mused'],[512,2048,4096,8192,32768,65536]],
-    'ncpu': [4,'Number of Jobs','Number of Cores Reserved','Histogram of Core Reservation',mrg_u_result['l_ncpu'],[1,2,4,8,12,50]],
-    'eff': [5,'Number of Jobs','Job Efficiency ((CPU Usage*Cores)/RunTime)','Histogram of Job Efficiency',mrg_u_result['l_eff'],[0,10,20,30,40,50,60,70,80,90,100,200,400]],
-    'memdelta': [6,'Number of Jobs','(Mem. Reserved) - (Mem. Used)','Histogram of Memory Efficiency',mrg_u_result['l_memdelta'],[-8192,-1024,0,1024,2048,8192,16384,32768,65536]]
+    'c_used': [0,'cpu_usage','Number of Jobs','CPU Usage (sec per job)','Histogram of CPU Usage',mrg_u_result['l_cpu'],[0,60,3600,14400,43200,86400,604800,2592000]],
+    'run_t': [1,'run_time','Number of Jobs','Wall Clock Time (sec per job)','Histogram of Job Run Times',mrg_u_result['l_r'],None],
+    'mrsv': [2,'mem_reserved','Number of Jobs','Memory Reserved (MB per core)','Histogram of Memory Reservations',mrg_u_result['l_mrsv'],[512,2048,4096,8192,32768,65536]],
+    'mused': [3,'mem_used','Number of Jobs','Memory Used (MB per job)','Histogram of Memory Usage',mrg_u_result['l_mused'],[512,2048,4096,8192,32768,65536]],
+    'ncpu': [4,'number_cores','Number of Jobs','Number of Cores Reserved','Histogram of Core Reservation',mrg_u_result['l_ncpu'],[1,2,4,8,12,50]],
+    'eff': [5,'efficiency','Number of Jobs','Job Efficiency ((CPU Usage*Cores)/RunTime)','Histogram of Job Efficiency',mrg_u_result['l_eff'],[0,10,20,30,40,50,60,70,80,90,100,200,400]],
+    'memdelta': [6,'mem_delta','Number of Jobs','(Mem. Reserved) - (Mem. Used)','Histogram of Memory Efficiency',mrg_u_result['l_memdelta'],[-8192,-1024,0,1024,2048,8192,16384,32768,65536]]
     }
 
 def filter_string(d_args):
@@ -338,12 +346,14 @@ def filter_string(d_args):
 
 filter_names = filter_string(d_args)
 
-if args.showgraphs:
-    draw_hist(d_figs['c_used'])
-    draw_hist(d_figs['run_t'])
-    draw_hist(d_figs['mrsv'])
-    draw_hist(d_figs['mused'])
-    draw_hist(d_figs['ncpu'])
-    draw_hist(d_figs['eff'])
-    draw_hist(d_figs['memdelta'])
-    plt.show()
+if args.showgraphs or args.savegraphs:
+    draw_hist(d_figs['c_used'],args.savegraphs)
+    draw_hist(d_figs['run_t'],args.savegraphs)
+    draw_hist(d_figs['mrsv'],args.savegraphs)
+    draw_hist(d_figs['mused'],args.savegraphs)
+    draw_hist(d_figs['ncpu'],args.savegraphs)
+    draw_hist(d_figs['eff'],args.savegraphs)
+    draw_hist(d_figs['memdelta'],args.savegraphs)
+    if args.showgraphs:
+        plt.show()
+
