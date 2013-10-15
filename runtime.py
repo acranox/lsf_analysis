@@ -24,10 +24,9 @@
 import argparse
 import gc
 import math
-#import matplotlib.pyplot as plt
+import matplotlib.pyplot as plt
 import os
 import sys
-#import pylab
 
 usage_info = '''usage: %s <options>
         at a minimum, specify --infile <file.out>''' % sys.argv[0] 
@@ -241,35 +240,6 @@ def calc(data_bin):
         l_ncpu.append(n_cpu)
     return l_cpu, l_r, l_mrsv, l_mused, l_ncpu
 
-def loop_args(l_input,d_args):
-    l_filtered  = l_input 
-#    d_results   = dict.fromkeys(['u','q','jobs'])
-    d_results   = {}
-    for opt,arg in d_args.iteritems():
-        if arg and opt == "u":
-            u_list = arg.split(",")
-            # list comprehension!
-            d_results['newu_list'] = [ user for user in u_list  if user in d_uniq['u']]
-            for user in d_results['newu_list']:
-                lu_result = filter_generic(l_filtered,'user','eq',user)
-                d_results['jobs'] = lu_result
-        elif arg and opt == "q":
-            q_arg = arg.split(",")
-            d_results['jobs']  = filter_generic(d_results['jobs'],'queue','eq',q_arg)
-            d_results['q'].append(q_arg)
-            #print len(l_filtered)
-        elif arg and opt == "nonzeroexit":
-            d_results['jobs']  = filter_generic(d_results['jobs'],'exit','noteq',arg)
-        elif arg and opt == "minrun":
-            d_results['jobs']  = filter_generic(d_results['jobs'],'run_t','min',arg)
-            #print len(l_filtered)
-        elif arg and opt == "maxrun":
-            d_results['jobs']  = filter_generic(d_results['jobs'],'run_t','max',arg)
-            #print len(l_filtered)
-#        else:
-#            d_results['jobs'].append(l_filtered)
-    return d_results
-
 def create_dict(l_parsed):
     q_dict  = {}
     u_dict  = {}
@@ -286,7 +256,7 @@ def create_dict(l_parsed):
             u_dict[u] = [line]
     return q_dict, u_dict
 
-def new_print_results(d_results):
+def new_print_results(d_results,lu_merged):
     users_total = []
     if not args.csv:
         for user in d_results.keys():
@@ -301,14 +271,13 @@ def new_print_results(d_results):
             n_jobs      = len(l_result[0])
             c_total     = sum(l_result[0])/3600.0 
             print "%s,%0.1f,%d" % (user,c_total,n_jobs)
-    for user in d_results.keys():
-        users_total.extend(d_results[user])
-    l_result    = calc(users_total)
+    l_result    = lu_merged
     n_jobs      = len(l_result[0])
     c_total     = sum(l_result[0])/3600.0
     print "total,%0.1f,%d" % (c_total,n_jobs)
 
 
+u_merged    = []
 l_parsed    = create_list(args.infile)
 d_uniq      = find_uniques(l_parsed)
 d_args      = args.__dict__
@@ -316,11 +285,11 @@ d_filtered  = filter_generic(l_parsed,d_args)
 d_result    = create_dict(d_filtered['jobs'])
 q_dict      = d_result[0]
 u_dict      = d_result[1]
-new_print_results(u_dict)
-#print u_dict['pcd14']
-#for k,v in u_dict.iteritems():
-#    print len(v)
-#print_results(d_filtered)
+for user in u_dict.keys():
+    u_merged.extend(u_dict[user])
+mrg_u_result    = calc(u_merged)
+if not args.quiet:
+    new_print_results(u_dict,mrg_u_result)
 
 def hist_cused(l_input):
     plt.figure(0)
@@ -372,9 +341,9 @@ def hist_mused(l_input):
 
 
 if args.showgraphs:
-    hist_cused(l_result[0])
-    hist_runt(l_result[1])
-    hist_mrsv(l_result[2])
-    hist_mused(l_result[3])
-    hist_ncpu(l_result[4])
+    hist_cused(mrg_u_result[0])
+    hist_runt(mrg_u_result[1])
+    hist_mrsv(mrg_u_result[2])
+    hist_mused(mrg_u_result[3])
+    hist_ncpu(mrg_u_result[4])
     plt.show()
