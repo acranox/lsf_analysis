@@ -350,7 +350,7 @@ def draw_hist(l_input,save):
     figdata = l_input[6]
     figbins = l_input[7]
 #    figxticks = l_input[8]
-    plt.figure(fignum)
+    plt.figure(fignum, figsize=(16,9), dpi=900)
     plt.ylabel(figylab)
     plt.xlabel(figxlab)
     plt.grid(True)
@@ -365,8 +365,7 @@ def draw_hist(l_input,save):
         plt.hist(figdata)
     plt.draw()
     if save:
-        plt.figure.set_size_inches(12,8)
-        plt.savefig(figfile,dpi=100)
+        plt.savefig(figfile)
 
 
 def draw_bar(l_input,save):
