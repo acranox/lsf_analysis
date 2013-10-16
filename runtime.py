@@ -140,9 +140,9 @@ def makeintorzero(v):
 
 def mungemrsv(m):
     if m == 0:
-        m = 2097152/1024
+        m = 2
     else:
-       m = m/1024
+       m = m/1048576
     return m
 
 def create_list(datafile):
@@ -239,10 +239,10 @@ def calc(data_bin):
 #        ssusp_t = line[13]
 #        unk_t   = line[14]
 #        dep     = line[15]
-        d_calc['l_cpu'].append(c_used)
+        d_calc['l_cpu'].append(c_used/3600.0)
         d_calc['l_r'].append(run_t)
         d_calc['l_mrsv'].append(m_rsv*n_cpu)
-        d_calc['l_mused'].append(m_used/1024)
+        d_calc['l_mused'].append(m_used/1048576.0)
         d_calc['l_ncpu'].append(n_cpu)
         d_calc['l_eff'].append(eff)
         d_calc['l_memdelta'].append(m_rsv-m_used)
@@ -289,18 +289,18 @@ def new_print_results(d_results,lu_merged):
         for user in d_results.keys():
             l_result    = calc(d_results[user])
             n_jobs      = len(l_result['l_cpu'])
-            c_total     = sum(l_result['l_cpu'])/3600.0 
+            c_total     = sum(l_result['l_cpu'])
             print "users: %s\n%0.1f cpu hours and %d jobs" % (user,c_total,n_jobs)
     elif args.csv:
         print "user,cpu_hours,numjobs"
         for user in d_results.keys():
             l_result    = calc(d_results[user])
             n_jobs      = len(l_result['l_cpu'])
-            c_total     = sum(l_result['l_cpu'])/3600.0 
+            c_total     = sum(l_result['l_cpu'])
             print "%s,%0.1f,%d" % (user,c_total,n_jobs)
     l_result    = lu_merged
     n_jobs      = len(l_result['l_cpu'])
-    c_total     = sum(l_result['l_cpu'])/3600.0
+    c_total     = sum(l_result['l_cpu'])
     print "total,%0.1f,%d" % (c_total,n_jobs)
 
 def make_csv(d_results,lu_merged):
@@ -357,9 +357,9 @@ def draw_hist(l_input,save):
     plt.suptitle(figtit)
 #    if figxticks:
 #        plt.xticks(figxticks)
-    if figbins == "auto":
-        plt.hist(figdata, bins=len(set(figdata)))
-    elif figbins and figbins != "auto":
+#    if figbins == "auto":
+#        plt.hist(figdata, bins=len(set(figdata)))
+    if figbins and figbins != "auto":
         plt.hist(figdata, bins=figbins)
     elif not figbins:
         plt.hist(figdata)
@@ -417,15 +417,14 @@ def draw_scatter(l_input,save):
 
 
 d_figs = {
-    'cpu_usage': [0,'hist','cpu_usage','Number of Jobs','CPU Usage (sec per job)','Histogram of CPU Usage',mrg_u_result['l_cpu'],range(0,2592000,60)],
-    'runtime': [1,'hist','runtime','Number of Jobs','Wall Clock Time (sec per job)','Histogram of Job Run Times',mrg_u_result['l_r'],'auto'],
-    'mem_reserved': [2,'hist','mem_reserved','Number of Jobs','Memory Reserved (MB per core)','Histogram of Memory Reservations',mrg_u_result['l_mrsv'],range(0,65536,2048)],
-    'mem_used': [3,'hist','mem_used','Number of Jobs','Memory Used (MB per job)','Histogram of Memory Usage',mrg_u_result['l_mused'],range(0,65536,2048)],
+    'cpu_usage': [0,'hist','cpu_usage','Number of Jobs','CPU Usage (hours per job)','Histogram of CPU Usage',mrg_u_result['l_cpu'],range(0,2592000,60)],
+    'runtime': [1,'hist','runtime','Number of Jobs','Wall Clock Time (sec per job)','Histogram of Job Run Times',mrg_u_result['l_r'],range(0,2592000,60)],
+    'mem_reserved': [2,'hist','mem_reserved','Number of Jobs','Memory Reserved (GB per core)','Histogram of Memory Reservations',mrg_u_result['l_mrsv'],range(0,65536,2048)],
+    'mem_used': [3,'hist','mem_used','Number of Jobs','Memory Used (GB per job)','Histogram of Memory Usage',mrg_u_result['l_mused'],range(0,65536,2048)],
     'ncpu': [4,'hist','number_cores','Number of Jobs','Number of Cores Reserved','Histogram of Core Reservation',mrg_u_result['l_ncpu'],range(1,128,1)],
     'eff': [5,'hist','efficiency','Number of Jobs','Job Efficiency ((CPU Usage*Cores)/RunTime)','Histogram of Job Efficiency',mrg_u_result['l_eff'],range(10,500,20)],
     'memdelta': [6,'hist','mem_delta','Number of Jobs','(Mem. Reserved) - (Mem. Used)','Histogram of Memory Efficiency',mrg_u_result['l_memdelta'],range(-8192,65536,2048)],
-    'memscat': [7,'scatter','mem_scat','Mem. Used (MB)','Mem. Reserved (MB)','Scatter Plot of Memory Efficiency',mrg_u_result['l_mused'],mrg_u_result['l_mrsv']],
-    'mem_used2': [8,'hist','mem_used2','Number of Jobs','Memory Used (MB per job)','Histogram of Memory Usage',mrg_u_result['l_mused'],range(0,65536,2048)],
+    'memscat': [7,'scatter','mem_scat','Mem. Used (MB)','Mem. Reserved (MB)','Scatter Plot of Memory Efficiency',mrg_u_result['l_mused'],mrg_u_result['l_mrsv']]
     }
 
 filter_names = filter_string(d_args)
