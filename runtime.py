@@ -412,19 +412,20 @@ def draw_scatter(l_input,save):
     plt.grid(True)
     plt.suptitle(figtit)
 #    plt.xlim(figdata_x[0],figdata_x[-1])
+    plt.axes().set_aspect('equal', 'datalim')
     plt.scatter(figdata_x,figdata_y,c='b',marker='.')
     plt.draw()
 
 
 
 d_figs = {
-    'cpu_usage': [0,'hist','cpu_usage','Number of Jobs','CPU Usage (hours per job)','Histogram of CPU Usage',mrg_u_result['l_cpu'],range(0,2592000,60)],
+    'cpu_usage': [0,'hist','cpu_usage','Number of Jobs','CPU Usage (hours per job)','Histogram of CPU Usage',mrg_u_result['l_cpu'],range(0,720,1)],
     'runtime': [1,'hist','runtime','Number of Jobs','Wall Clock Time (sec per job)','Histogram of Job Run Times',mrg_u_result['l_r'],range(0,2592000,60)],
-    'mem_reserved': [2,'hist','mem_reserved','Number of Jobs','Memory Reserved (GB per core)','Histogram of Memory Reservations',mrg_u_result['l_mrsv'],range(0,65536,2048)],
-    'mem_used': [3,'hist','mem_used','Number of Jobs','Memory Used (GB per job)','Histogram of Memory Usage',mrg_u_result['l_mused'],range(0,65536,2048)],
+    'mem_reserved': [2,'hist','mem_reserved','Number of Jobs','Memory Reserved (GB per core)','Histogram of Memory Reservations',mrg_u_result['l_mrsv'],range(0,96,2)],
+    'mem_used': [3,'hist','mem_used','Number of Jobs','Memory Used (GB per job)','Histogram of Memory Usage',mrg_u_result['l_mused'],range(0,64,1)],
     'ncpu': [4,'hist','number_cores','Number of Jobs','Number of Cores Reserved','Histogram of Core Reservation',mrg_u_result['l_ncpu'],range(1,128,1)],
     'eff': [5,'hist','efficiency','Number of Jobs','Job Efficiency ((CPU Usage*Cores)/RunTime)','Histogram of Job Efficiency',mrg_u_result['l_eff'],range(10,500,20)],
-    'memdelta': [6,'hist','mem_delta','Number of Jobs','(Mem. Reserved) - (Mem. Used)','Histogram of Memory Efficiency',mrg_u_result['l_memdelta'],range(-8192,65536,2048)],
+    'memdelta': [6,'hist','mem_delta','Number of Jobs','(Mem. Reserved) - (Mem. Used)','Histogram of Memory Efficiency',mrg_u_result['l_memdelta'],range(-8,64,2)],
     'memscat': [7,'scatter','mem_scat','Mem. Used (MB)','Mem. Reserved (MB)','Scatter Plot of Memory Efficiency',mrg_u_result['l_mused'],mrg_u_result['l_mrsv']]
     }
 
