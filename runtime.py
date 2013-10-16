@@ -343,6 +343,7 @@ if args.csv:
 
 def draw_hist(l_input,save):
     fignum = l_input[0]
+    figname = l_input[2]
     figfile = '%s.png' % l_input[2]
     figylab = l_input[3]
     figxlab = l_input[4]
@@ -350,7 +351,7 @@ def draw_hist(l_input,save):
     figdata = l_input[6]
     figbins = l_input[7]
 #    figxticks = l_input[8]
-    plt.figure(fignum, figsize=(16,9), dpi=900)
+    plt.figure(fignum)
     plt.ylabel(figylab)
     plt.xlabel(figxlab)
     plt.grid(True)
@@ -365,7 +366,7 @@ def draw_hist(l_input,save):
         plt.hist(figdata)
     plt.draw()
     if save:
-        plt.savefig(figfile)
+        plt.savefig(figfile, dpi=300)
 
 
 def draw_bar(l_input,save):
