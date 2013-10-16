@@ -26,6 +26,8 @@ import gc
 import math
 import os
 import sys
+import csv
+import numpy as np
 
 usage_info = '''usage: %s <options>
         at a minimum, specify --infile <file.out>''' % sys.argv[0] 
@@ -76,7 +78,7 @@ parser.add_argument('--sumusers',
 parser.add_argument('--graphs', '-g',
                 type=str,
                 dest='makegraphs',
-                help='''Is one of: all, run_time, ncpu, mem_reserved, cpu_usage, memdelta, eff, mem_used''')
+                help='''Is one of: all, runtime, ncpu, mem_reserved, cpu_usage, memdelta, eff, mem_used''')
 
 parser.add_argument('--savegraphs',
                 action="store_true",
@@ -301,6 +303,27 @@ def new_print_results(d_results,lu_merged):
     c_total     = sum(l_result['l_cpu'])/3600.0
     print "total,%0.1f,%d" % (c_total,n_jobs)
 
+def make_csv(d_results,lu_merged):
+    for user in d_results.keys():
+        l_result    = calc(d_results[user])
+        for metric in l_result.keys():
+            out_fn      = user+"_"+metric.replace("l_","")+".csv"
+            out_fh      = open(out_fn, 'w')
+#            out_csv     = csv.writer(out_fh, delimiter=',',quoting=csv.QUOTE_ALL)
+            out_csv     = csv.writer(out_fh, delimiter='\n')
+            out_fh.write("%s,%s\n" % (user,metric.replace("l_","")))
+            out_csv.writerow(sorted(l_result[metric]))
+            out_fh.close()
+    for metric in lu_merged.keys():
+        tot_fn      = "total_"+metric.replace("l_","")+".csv"
+        tot_fh      = open(tot_fn, 'w')
+        tot_csv     = csv.writer(tot_fh, delimiter='\n')
+        tot_fh.write("total,%s\n" % (metric.replace("l_","")))
+        tot_csv.writerow(sorted(lu_merged[metric]))
+        tot_fh.close()
+
+
+    
 
 u_merged    = []
 l_parsed    = create_list(args.infile)
@@ -315,6 +338,8 @@ for user in u_dict.keys():
 mrg_u_result    = calc(u_merged)
 if not args.quiet:
     new_print_results(u_dict,mrg_u_result)
+if args.csv:
+    make_csv(u_dict,mrg_u_result)
 
 def draw_hist(l_input,save):
     fignum  = l_input[0]
@@ -330,20 +355,78 @@ def draw_hist(l_input,save):
     plt.grid(True)
     plt.suptitle(figtit)
     if figbins == "auto":    
-        plt.hist(figdata, bins=len(set(figdata)))
+#        figbins = set(figdata)
+#        plt.xticks(figbins)
+        plt.hist(figdata, bins=len(set(figbins)), align='left')
     elif figbins and figbins != "auto":    
-        plt.hist(figdata, bins=figbins)
+#        plt.xticks(figbins)
+        plt.hist(figdata, bins=figbins, align='left')
     elif not figbins:
-        plt.hist(figdata)
+        plt.hist(figdata, align='left')
     plt.draw()
     if save:
         plt.savefig(figfile)
 
+def draw_bar(l_input,save):
+    fignum  = l_input[0]
+    figfile = '%s.png' % l_input[1]
+    figylab = l_input[2]
+    figxlab = l_input[3]
+    figtit  = '%s - (source: %s)\nFilters: %s' % (l_input[4],args.infile, filter_names)
+    figbins = l_input[6]
+    if figbins and figbins != "auto":    
+        figdata_y, figdata_x = np.histogram(l_input[5], bins=figbins)
+    elif not figbins or figbins == "auto":    
+        figdata_y, figdata_x = np.histogram(l_input[5])
+    figdata_x = figdata_x[:-1]
+    plt.figure(fignum)
+    plt.ylabel(figylab)
+    plt.xlabel(figxlab)
+    plt.grid(True)
+    plt.suptitle(figtit)
+    binlen = len(figdata_x)
+    binwidth = 1.0/binlen
+#    plt.xticks(range(int(figdata_x[0]),int(figdata_x[-1]),int((figdata_x[-1]-figdata_x[0])/len(figdata_x))),figdata_x)
+#    plt.xticks(range(int(figdata_x[0]),int(figdata_x[-1]),int((figdata_x[-1]-figdata_x[0])/len(figdata_x))))
+    plt.xticks(figdata_x)
+    plt.xlim(figdata_x[0],figdata_x[-1])
+    barwidth = float(((figdata_x[-1]-figdata_x[0])/len(figdata_x))/2)
+    plt.bar(figdata_x,figdata_y,width=barwidth,align='edge')
+#    plt.bar(figdata_x,figdata_y,width=1.0,align='center')
+#    plt.bar(range(len(figdata_x)),figdata_y,width=1.0,align='center')
+    plt.draw()
+
+def draw_scatter(l_input,save):
+    fignum  = l_input[0]
+    figfile = '%s.png' % l_input[1]
+    figylab = l_input[2]
+    figxlab = l_input[3]
+    figtit  = '%s - (source: %s)\nFilters: %s' % (l_input[4],args.infile, filter_names)
+    figdata = l_input[5]
+    d_figxy = {}
+    for p in figdata:
+        if d_figxy.has_key(p):
+            d_figxy[p] +=1
+        else:
+            d_figxy[p] = 1
+    figdata_x = d_figxy.keys()
+    figdata_y = d_figxy.values()
+    plt.figure(fignum)
+    plt.ylabel(figylab)
+    plt.xlabel(figxlab)
+    plt.grid(True)
+    plt.suptitle(figtit)
+    plt.xlim(figdata_x[0],figdata_x[-1])
+    plt.scatter(figdata_x,figdata_y)
+    plt.draw()
+
+
+
 d_figs = {
     'cpu_usage': [0,'cpu_usage','Number of Jobs','CPU Usage (sec per job)','Histogram of CPU Usage',mrg_u_result['l_cpu'],[0,60,3600,14400,43200,86400,604800,2592000]],
-    'run_time': [1,'run_time','Number of Jobs','Wall Clock Time (sec per job)','Histogram of Job Run Times',mrg_u_result['l_r'],None],
-    'mem_reserved': [2,'mem_reserved','Number of Jobs','Memory Reserved (MB per core)','Histogram of Memory Reservations',mrg_u_result['l_mrsv'],[512,2048,4096,8192,32768,65536]],
-    'mem_used': [3,'mem_used','Number of Jobs','Memory Used (MB per job)','Histogram of Memory Usage',mrg_u_result['l_mused'],[512,2048,4096,8192,32768,65536]],
+    'runtime': [1,'runtime','Number of Jobs','Wall Clock Time (sec per job)','Histogram of Job Run Times',mrg_u_result['l_r'],'auto'],
+    'mem_reserved': [2,'mem_reserved','Number of Jobs','Memory Reserved (MB per core)','Histogram of Memory Reservations',mrg_u_result['l_mrsv'],[0,512,2048,4096,8192,32768,65536]],
+    'mem_used': [3,'mem_used','Number of Jobs','Memory Used (MB per job)','Histogram of Memory Usage',mrg_u_result['l_mused'],[0,512,2048,4096,8192,32768,65536]],
     'ncpu': [4,'number_cores','Number of Jobs','Number of Cores Reserved','Histogram of Core Reservation',mrg_u_result['l_ncpu'],[1,2,4,8,12,50]],
     'eff': [5,'efficiency','Number of Jobs','Job Efficiency ((CPU Usage*Cores)/RunTime)','Histogram of Job Efficiency',mrg_u_result['l_eff'],[0,10,20,30,40,50,60,70,80,90,100,200,400]],
     'memdelta': [6,'mem_delta','Number of Jobs','(Mem. Reserved) - (Mem. Used)','Histogram of Memory Efficiency',mrg_u_result['l_memdelta'],[-8192,-1024,0,1024,2048,8192,16384,32768,65536]]
@@ -362,6 +445,11 @@ if args.showgraphs or args.savegraphs or args.makegraphs:
         l_graph = args.makegraphs.split(",")
     for graph in l_graph:
         draw_hist(d_figs[graph],args.savegraphs)
+#        histy = np.histogram(d_figs[graph][5])
+#        print histy[0]
+#        print histy[1]
+#        draw_bar(d_figs[graph],args.savegraphs)
+#        draw_scatter(d_figs[graph],args.savegraphs)
     if args.showgraphs or args.makegraphs:
         plt.show()
 
