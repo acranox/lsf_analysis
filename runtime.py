@@ -421,11 +421,11 @@ d_figs = {
     'runtime': [1,'hist','runtime','Number of Jobs','Wall Clock Time (sec per job)','Histogram of Job Run Times',mrg_u_result['l_r'],'auto'],
     'mem_reserved': [2,'hist','mem_reserved','Number of Jobs','Memory Reserved (MB per core)','Histogram of Memory Reservations',mrg_u_result['l_mrsv'],range(0,65536,2048)],
     'mem_used': [3,'hist','mem_used','Number of Jobs','Memory Used (MB per job)','Histogram of Memory Usage',mrg_u_result['l_mused'],[0,512,2048,4096,8192,32768,65536]],
-    'mem_used2': [3,'hist','mem_used2','Number of Jobs','Memory Used (MB per job)','Histogram of Memory Usage',mrg_u_result['l_mused'],range(0,65536,2048)],
     'ncpu': [4,'hist','number_cores','Number of Jobs','Number of Cores Reserved','Histogram of Core Reservation',mrg_u_result['l_ncpu'],[1,2,4,8,12,50]],
     'eff': [5,'hist','efficiency','Number of Jobs','Job Efficiency ((CPU Usage*Cores)/RunTime)','Histogram of Job Efficiency',mrg_u_result['l_eff'],range(10,500,20)],
     'memdelta': [6,'hist','mem_delta','Number of Jobs','(Mem. Reserved) - (Mem. Used)','Histogram of Memory Efficiency',mrg_u_result['l_memdelta'],[-8192,-1024,0,1024,2048,8192,16384,32768,65536]],
-    'memscat': [7,'scatter','mem_scat','Mem. Used (MB)','Mem. Reserved (MB)','Scatter Plot of Memory Efficiency',mrg_u_result['l_mused'],mrg_u_result['l_mrsv']]
+    'memscat': [7,'scatter','mem_scat','Mem. Used (MB)','Mem. Reserved (MB)','Scatter Plot of Memory Efficiency',mrg_u_result['l_mused'],mrg_u_result['l_mrsv']],
+    'mem_used2': [8,'hist','mem_used2','Number of Jobs','Memory Used (MB per job)','Histogram of Memory Usage',mrg_u_result['l_mused'],range(0,65536,2048)],
     }
 
 filter_names = filter_string(d_args)
