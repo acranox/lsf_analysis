@@ -409,11 +409,16 @@ def draw_scatter(l_input,save):
     plt.figure(fignum)
     plt.ylabel(figylab)
     plt.xlabel(figxlab)
+#    plt.xlim(0,max(figdata_x+figdata_y))
+#    plt.ylim(0,max(figdata_x+figdata_y))
+    plt.xlim(0,max(figdata_y))
+    plt.ylim(0,max(figdata_y))
     plt.grid(True)
     plt.suptitle(figtit)
 #    plt.xlim(figdata_x[0],figdata_x[-1])
-    plt.axes().set_aspect('equal', 'datalim')
+#    plt.axes().set_aspect('equal', adjustable='datalim', anchor='SW')
     plt.scatter(figdata_x,figdata_y,c='b',marker='.')
+    plt.plot([0,100],[0,100])
     plt.draw()
 
 
