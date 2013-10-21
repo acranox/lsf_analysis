@@ -420,7 +420,7 @@ if args.debug:
     t_fin   = time.time()
     print "create_dict() completed in: %8.2f seconds." % (t_fin-t_start)
 elif not args.debug:
-    d_filtered  = create_filtered_list(l_parsed,d_args)
+    d_filtered  = create_filtered_list(args.infile,d_args)
     d_result    = create_dict(d_filtered['jobs'])
 
 q_dict      = d_result[0]
