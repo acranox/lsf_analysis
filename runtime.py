@@ -22,12 +22,14 @@
 #        dependency      = pos[15]
 
 import argparse
+import datetime
+import csv
 import gc
 import math
+import numpy as np
 import os
 import sys
-import csv
-import numpy as np
+import time
 
 usage_info = '''usage: %s <options>
         at a minimum, specify --infile <file.out>''' % sys.argv[0] 
@@ -77,8 +79,8 @@ parser.add_argument('--sumusers',
 
 parser.add_argument('--graphs', '-g',
                 type=str,
-                dest='makegraphs',
-                help='''Is one of: all, runtime, ncpu, mem_reserved, cpu_usage, memdelta, eff, mem_used''')
+                dest='graphs',
+                help='''one or more of: all,runtime,ncpu,mem_reserved,cpu_usage,memdelta,eff,mem_used,memscat''')
 
 parser.add_argument('--savegraphs',
                 action="store_true",
@@ -100,6 +102,12 @@ parser.add_argument('--quiet',
                 dest='quiet',
                 help='supress certain output')
 
+parser.add_argument('--debug',
+                action="store_true",
+                dest='debug',
+                help='print timing info for debug purposes')
+
+
 
 args = parser.parse_args()
 
@@ -112,6 +120,8 @@ q_contrib   = ['church_int_15m','danuser_int_15m','freedberg_int_15m','i2b2_int_
 q_shared    = ['priority','interactive','mpi','mcore','parallel','short','long','mini']
 q_all       = q_contrib+q_shared 
 
+
+# Dictionary that defines the structure of the data file
 d_pos = {
     'jobid':    [0,'int'],
     'user':     [1,'str'],
@@ -132,6 +142,7 @@ d_pos = {
 }
 
 def makeintorzero(v):
+    '''Convert a string into an int if possible, or set it to 0'''
     try:
         n = int(v)
     except:
@@ -139,6 +150,7 @@ def makeintorzero(v):
     return n
 
 def mungemrsv(m):
+    '''If memory reservation was zero, set it to 2 (GB), otherwise convert the value from KB to GB'''
     if m == 0:
         m = 2
     else:
@@ -146,6 +158,7 @@ def mungemrsv(m):
     return m
 
 def create_list(datafile):
+    '''Convert the whole input file into a list.'''
     output_dir      = datafile.replace('.out','')
     input_fn        = datafile
     input_fh        = open(input_fn, "r")
@@ -249,6 +262,7 @@ def calc(data_bin):
     return d_calc
 
 def filter_string(argdict):
+    '''Based on the arguments passed in, build a human-readable string of which filters were used'''
     l_args = []
     if argdict['q']:
         l_args.append('Queues: %s' % argdict['q'])
@@ -322,25 +336,7 @@ def make_csv(d_results,lu_merged):
         tot_csv.writerow(sorted(lu_merged[metric]))
         tot_fh.close()
 
-
-    
-
-u_merged    = []
-l_parsed    = create_list(args.infile)
-d_uniq      = find_uniques(l_parsed)
-d_args      = args.__dict__
-d_filtered  = filter_generic(l_parsed,d_args)
-d_result    = create_dict(d_filtered['jobs'])
-q_dict      = d_result[0]
-u_dict      = d_result[1]
-for user in u_dict.keys():
-    u_merged.extend(u_dict[user])
-mrg_u_result    = calc(u_merged)
-if not args.quiet:
-    new_print_results(u_dict,mrg_u_result)
-if args.csv:
-    make_csv(u_dict,mrg_u_result)
-
+# Functions for creating a histogram
 def draw_hist(l_input,save):
     fignum = l_input[0]
     figname = l_input[2]
@@ -368,7 +364,7 @@ def draw_hist(l_input,save):
     if save:
         plt.savefig(figfile, dpi=300)
 
-
+# Functions for creating a bar graph
 def draw_bar(l_input,save):
     fignum  = l_input[0]
     figfile = '%s.png' % l_input[1]
@@ -398,6 +394,7 @@ def draw_bar(l_input,save):
 #    plt.bar(range(len(figdata_x)),figdata_y,width=1.0,align='center')
     plt.draw()
 
+# Function for drawing a Scatter plot
 def draw_scatter(l_input,save):
     fignum  = l_input[0]
     figfile = '%s.png' % l_input[2]
@@ -423,6 +420,71 @@ def draw_scatter(l_input,save):
 
 
 
+u_merged    = []
+
+if args.debug:
+    print "Starting create_list() at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    start_cl    = time.time()
+l_parsed    = create_list(args.infile)
+if args.debug:
+    finish_cl   = time.time()
+    print "Finished create_list() at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print "That took %s seconds." % (finish_cl-start_cl)
+
+if args.debug:
+    print "Starting find_uniques() at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    start_duniq    = time.time()
+d_uniq      = find_uniques(l_parsed)
+if args.debug:
+    finish_duniq   = time.time()
+    print "Finished find_uniques() at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print "That took %s seconds." % (finish_duniq-start_duniq)
+d_args      = args.__dict__
+
+if args.debug:
+    print "Starting filter_generic() at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    start_filter    = time.time()
+d_filtered  = filter_generic(l_parsed,d_args)
+if args.debug:
+    finish_filter   = time.time()
+    print "Finished filter_generic() at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print "That took %s seconds." % (finish_filter-start_filter)
+
+if args.debug:
+    print "Starting create_dict() at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    start_created    = time.time()
+d_result    = create_dict(d_filtered['jobs'])
+if args.debug:
+    finish_created   = time.time()
+    print "Finished create_dict() at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print "That took %s seconds." % (finish_created-start_created)
+
+q_dict      = d_result[0]
+u_dict      = d_result[1]
+
+if args.debug:
+    print "Starting new_print_results() and make_csv() at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    start_print    = time.time()
+
+for user in u_dict.keys():
+    u_merged.extend(u_dict[user])
+mrg_u_result    = calc(u_merged)
+if not args.quiet:
+    new_print_results(u_dict,mrg_u_result)
+if args.csv:
+    make_csv(u_dict,mrg_u_result)
+
+if args.debug:
+    finish_print   = time.time()
+    print "Finished new_print_results() and make_csv() at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    print "That took %s seconds." % (finish_print-start_print)
+
+
+# Run the filter_string function to get a human readable string of the filters that were applied
+filter_names = filter_string(d_args)
+
+
+# Dictionary with the parameters for the various graphs.
 d_figs = {
     'cpu_usage': [0,'hist','cpu_usage','Number of Jobs','CPU Usage (hours per job)','Histogram of CPU Usage',mrg_u_result['l_cpu'],range(0,720,1)],
     'runtime': [1,'hist','runtime','Number of Jobs','Wall Clock Time (sec per job)','Histogram of Job Run Times',mrg_u_result['l_r'],range(0,2592000,60)],
@@ -434,17 +496,19 @@ d_figs = {
     'memscat': [7,'scatter','mem_scat','Mem. Used (MB)','Mem. Reserved (MB)','Scatter Plot of Memory Efficiency',mrg_u_result['l_mused'],mrg_u_result['l_mrsv']]
     }
 
-filter_names = filter_string(d_args)
 
-if args.showgraphs or args.savegraphs or args.makegraphs:
+if args.showgraphs or args.savegraphs or args.graphs:
+    if args.debug:
+        print "Starting making graphs at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        start_graphs    = time.time()
     if args.savegraphs and not args.showgraphs:
         import matplotlib
         matplotlib.use("agg")
     import matplotlib.pyplot as plt
-    if args.makegraphs == "all" or not args.makegraphs:
+    if args.graphs == "all" or not args.graphs:
         l_graph = d_figs.keys()
     else:
-        l_graph = args.makegraphs.split(",")
+        l_graph = args.graphs.split(",")
     for graph in l_graph:
         if d_figs[graph][1] == "scatter":
             draw_scatter(d_figs[graph],args.savegraphs)
@@ -452,5 +516,9 @@ if args.showgraphs or args.savegraphs or args.makegraphs:
             draw_hist(d_figs[graph],args.savegraphs)
         elif d_figs[graph][1] == "bar":
             draw_bar(d_figs[graph],args.savegraphs)
-    if args.showgraphs or args.makegraphs:
+    if args.showgraphs or args.graphs:
         plt.show()
+    if args.debug:
+        finish_print   = time.time()
+        print "Finished making graphs at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        print "That took %s seconds." % (finish_graphs-start_graphs)
