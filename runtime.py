@@ -34,7 +34,6 @@ import time
 usage_info = '''usage: %s <options>
         at a minimum, specify --infile <file.out>''' % sys.argv[0] 
 
-#gc.disable()
 
 if len(sys.argv) <= 1:
     print usage_info
@@ -159,6 +158,7 @@ def mungemrsv(m):
 
 def create_list(datafile):
     '''Convert the whole input file into a list.'''
+    gc.disable()
     output_dir      = datafile.replace('.out','')
     input_fn        = datafile
     input_fh        = open(input_fn, "r")
@@ -168,10 +168,11 @@ def create_list(datafile):
         l_bin.append(pos)
 
     input_fh.close()
-
+    gc.enable()
     return l_bin
 
 def filter_generic(data_bin,d_args):
+    gc.disable()
     d_filt_result   = {'jobs':[]}
     if d_args['u']:
         u_list = d_args['u'].split(",")
@@ -210,6 +211,7 @@ def filter_generic(data_bin,d_args):
         elif not d_args['exitzero']:
             if user in newu_list and queue in qnames and run_t >= minrun and run_t <= maxrun:
                 d_filt_result['jobs'].append(line)
+    gc.enable()
     return d_filt_result
 
 def find_uniques(data_bin):
@@ -232,6 +234,7 @@ def find_uniques(data_bin):
 
 
 def calc(data_bin):
+    gc.disable()
     result      = data_bin
     d_calc      = {'l_cpu': [], 'l_r':[], 'l_mrsv': [], 'l_mused': [], 'l_ncpu': [], 'l_eff': [], 'l_memdelta': [] }
     for line in result:
@@ -259,6 +262,7 @@ def calc(data_bin):
         d_calc['l_ncpu'].append(n_cpu)
         d_calc['l_eff'].append(eff)
         d_calc['l_memdelta'].append(m_rsv-m_used)
+    gc.enable()
     return d_calc
 
 def filter_string(argdict):
@@ -421,50 +425,36 @@ def draw_scatter(l_input,save):
 
 
 u_merged    = []
-
-if args.debug:
-    print "Starting create_list() at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    start_cl    = time.time()
-l_parsed    = create_list(args.infile)
-if args.debug:
-    finish_cl   = time.time()
-    print "Finished create_list() at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print "That took %s seconds." % (finish_cl-start_cl)
-
-if args.debug:
-    print "Starting find_uniques() at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    start_duniq    = time.time()
-d_uniq      = find_uniques(l_parsed)
-if args.debug:
-    finish_duniq   = time.time()
-    print "Finished find_uniques() at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print "That took %s seconds." % (finish_duniq-start_duniq)
 d_args      = args.__dict__
 
 if args.debug:
-    print "Starting filter_generic() at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    start_filter    = time.time()
-d_filtered  = filter_generic(l_parsed,d_args)
-if args.debug:
-    finish_filter   = time.time()
-    print "Finished filter_generic() at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print "That took %s seconds." % (finish_filter-start_filter)
-
-if args.debug:
-    print "Starting create_dict() at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    start_created    = time.time()
-d_result    = create_dict(d_filtered['jobs'])
-if args.debug:
-    finish_created   = time.time()
-    print "Finished create_dict() at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print "That took %s seconds." % (finish_created-start_created)
+    t_start = time.time()
+    l_parsed    = create_list(args.infile)
+    t_fin   = time.time()
+    print "create_list() completed in: %s seconds." % (t_fin-t_start)
+    t_start = time.time()
+    d_uniq  = find_uniques(l_parsed)
+    t_fin   = time.time()
+    print "find_uniques() completed in: %s seconds." % (t_fin-t_start)
+    t_start = time.time()
+    d_filtered  = filter_generic(l_parsed,d_args)
+    t_fin   = time.time()
+    print "filter_generic() completed in: %s seconds." % (t_fin-t_start)
+    t_start = time.time()
+    d_result    = create_dict(d_filtered['jobs'])
+    t_fin   = time.time()
+    print "create_dict() completed in: %s seconds." % (t_fin-t_start)
+elif not args.debug:
+    l_parsed    = create_list(args.infile)
+    d_uniq      = find_uniques(l_parsed)
+    d_filtered  = filter_generic(l_parsed,d_args)
+    d_result    = create_dict(d_filtered['jobs'])
 
 q_dict      = d_result[0]
 u_dict      = d_result[1]
 
 if args.debug:
-    print "Starting new_print_results() and make_csv() at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    start_print    = time.time()
+    t_start = time.time()
 
 for user in u_dict.keys():
     u_merged.extend(u_dict[user])
@@ -475,9 +465,8 @@ if args.csv:
     make_csv(u_dict,mrg_u_result)
 
 if args.debug:
-    finish_print   = time.time()
-    print "Finished new_print_results() and make_csv() at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-    print "That took %s seconds." % (finish_print-start_print)
+    t_fin = time.time()
+    print "new_print_results() and make_csv() completed in: %s seconds." % (t_fin-t_start)
 
 
 # Run the filter_string function to get a human readable string of the filters that were applied
@@ -499,8 +488,7 @@ d_figs = {
 
 if args.showgraphs or args.savegraphs or args.graphs:
     if args.debug:
-        print "Starting making graphs at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        start_graphs    = time.time()
+        t_start = time.time()
     if args.savegraphs and not args.showgraphs:
         import matplotlib
         matplotlib.use("agg")
@@ -519,6 +507,7 @@ if args.showgraphs or args.savegraphs or args.graphs:
     if args.showgraphs or args.graphs:
         plt.show()
     if args.debug:
-        finish_print   = time.time()
-        print "Finished making graphs at: " ,datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        print "That took %s seconds." % (finish_graphs-start_graphs)
+        t_fin = time.time()
+        print "finished making graphs in: %s seconds." % (t_fin-t_start)
+
+
