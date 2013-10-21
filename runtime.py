@@ -156,40 +156,27 @@ def mungemrsv(m):
        m = m/1048576
     return m
 
-def create_list(datafile):
-    '''Convert the whole input file into a list.'''
+def create_filtered_list(datafile,d_args):
+    '''Create a list from the input file, filterd based on arguments'''
     gc.disable()
-    output_dir      = datafile.replace('.out','')
     input_fn        = datafile
     input_fh        = open(input_fn, "r")
-    l_bin           = []
-    for row in input_fh:
-        pos             = row.split(None)
-        l_bin.append(pos)
-
-    input_fh.close()
-    gc.enable()
-    return l_bin
-
-def filter_generic(data_bin,d_args):
-    gc.disable()
     d_filt_result   = {'jobs':[]}
+    u_list          = []
+    q_list          = []
+    # create default args, and parse the rest
     if d_args['u']:
-        u_list = d_args['u'].split(",")
-        # list comprehension!
-        newu_list = [ user for user in u_list if user in d_uniq['u']]
+        unames = d_args['u'].split(",")
     else:
-        newu_list = d_uniq['u']
+        unames = []
     if d_args['q'] and d_args['q'] == "contrib":
         qnames   = q_contrib
     elif d_args['q'] and d_args['q'] == "shared":
         qnames   = q_shared
-    elif d_args['q'] and d_args['q'] == "all":
-        qnames   = d_uniq['q']
     elif d_args['q']:
         qnames = d_args['q'].split(",")
     else:
-        qnames = d_uniq['q']
+        qnames = []
     if d_args['minrun']:
         minrun = d_args['minrun']
     else:
@@ -199,39 +186,34 @@ def filter_generic(data_bin,d_args):
     else:
         maxrun = sys.maxint
       
-    result      = data_bin
-    for line in result:
+    for row in input_fh:
+        line            = row.split(None) 
         user            = str(line[1])
         exitstatus      = int(line[2])
         queue           = str(line[3])
         run_t           = int(line[11])
+        u_list.append(user)
+        q_list.append(queue)
+        if user in unames or not unames:
+            ufilt = True
+        else:  
+            ufilt = False
+        if queue in qnames or not qnames:
+            qfilt = True
+        else:
+            qfilt = False
         if d_args['exitzero']:
-            if user in newu_list and queue in qnames and run_t >= minrun and run_t <= maxrun and exitstatus == 0:
+            if ufilt and qfilt and exitstatus == 0:
                 d_filt_result['jobs'].append(line)
         elif not d_args['exitzero']:
-            if user in newu_list and queue in qnames and run_t >= minrun and run_t <= maxrun:
+            if ufilt and qfilt:
                 d_filt_result['jobs'].append(line)
+    d_filt_result['u'] = list(set(u_list))
+    d_filt_result['q'] = list(set(q_list))
+ 
+    input_fh.close()
     gc.enable()
     return d_filt_result
-
-def find_uniques(data_bin):
-    ''' A function for getting all the user names and queues present in the file
-        and creating a dictionary with the values, using the keys "u" and "q" '''
-    uniques         = {}
-    u_list          = []
-    q_list          = []
-    for row in data_bin:
-        username    = str(row[1])
-        queue       = str(row[3])
-
-        u_list.append(username)
-        q_list.append(queue)
-
-    uniques['u'] = list(set(u_list))
-    uniques['q'] = list(set(q_list))
-
-    return uniques
-
 
 def calc(data_bin):
     gc.disable()
@@ -422,32 +404,23 @@ def draw_scatter(l_input,save):
     plt.plot([0,100],[0,100])
     plt.draw()
 
-
-
 u_merged    = []
 d_args      = args.__dict__
 
+# Run the filter_string function to get a human readable string of the filters that were applied
+filter_names = filter_string(d_args)
+
 if args.debug:
     t_start = time.time()
-    l_parsed    = create_list(args.infile)
+    d_filtered  = create_filtered_list(args.infile,d_args)
     t_fin   = time.time()
-    print "create_list() completed in: %8.2f seconds." % (t_fin-t_start)
-    t_start = time.time()
-    d_uniq  = find_uniques(l_parsed)
-    t_fin   = time.time()
-    print "find_uniques() completed in: %8.2f seconds." % (t_fin-t_start)
-    t_start = time.time()
-    d_filtered  = filter_generic(l_parsed,d_args)
-    t_fin   = time.time()
-    print "filter_generic() completed in: %8.2f seconds." % (t_fin-t_start)
+    print "create_filtered_list() completed in: %8.2f seconds." % (t_fin-t_start)
     t_start = time.time()
     d_result    = create_dict(d_filtered['jobs'])
     t_fin   = time.time()
     print "create_dict() completed in: %8.2f seconds." % (t_fin-t_start)
 elif not args.debug:
-    l_parsed    = create_list(args.infile)
-    d_uniq      = find_uniques(l_parsed)
-    d_filtered  = filter_generic(l_parsed,d_args)
+    d_filtered  = create_filtered_list(l_parsed,d_args)
     d_result    = create_dict(d_filtered['jobs'])
 
 q_dict      = d_result[0]
@@ -459,6 +432,7 @@ if args.debug:
 for user in u_dict.keys():
     u_merged.extend(u_dict[user])
 mrg_u_result    = calc(u_merged)
+
 if not args.quiet:
     new_print_results(u_dict,mrg_u_result)
 if args.csv:
@@ -467,10 +441,6 @@ if args.csv:
 if args.debug:
     t_fin = time.time()
     print "new_print_results() and make_csv() completed in: %8.2f seconds." % (t_fin-t_start)
-
-
-# Run the filter_string function to get a human readable string of the filters that were applied
-filter_names = filter_string(d_args)
 
 
 # Dictionary with the parameters for the various graphs.
