@@ -431,19 +431,19 @@ if args.debug:
     t_start = time.time()
     l_parsed    = create_list(args.infile)
     t_fin   = time.time()
-    print "create_list() completed in: %s seconds." % (t_fin-t_start)
+    print "create_list() completed in: %8.2f seconds." % (t_fin-t_start)
     t_start = time.time()
     d_uniq  = find_uniques(l_parsed)
     t_fin   = time.time()
-    print "find_uniques() completed in: %s seconds." % (t_fin-t_start)
+    print "find_uniques() completed in: %8.2f seconds." % (t_fin-t_start)
     t_start = time.time()
     d_filtered  = filter_generic(l_parsed,d_args)
     t_fin   = time.time()
-    print "filter_generic() completed in: %s seconds." % (t_fin-t_start)
+    print "filter_generic() completed in: %8.2f seconds." % (t_fin-t_start)
     t_start = time.time()
     d_result    = create_dict(d_filtered['jobs'])
     t_fin   = time.time()
-    print "create_dict() completed in: %s seconds." % (t_fin-t_start)
+    print "create_dict() completed in: %8.2f seconds." % (t_fin-t_start)
 elif not args.debug:
     l_parsed    = create_list(args.infile)
     d_uniq      = find_uniques(l_parsed)
@@ -466,7 +466,7 @@ if args.csv:
 
 if args.debug:
     t_fin = time.time()
-    print "new_print_results() and make_csv() completed in: %s seconds." % (t_fin-t_start)
+    print "new_print_results() and make_csv() completed in: %8.2f seconds." % (t_fin-t_start)
 
 
 # Run the filter_string function to get a human readable string of the filters that were applied
@@ -508,6 +508,6 @@ if args.showgraphs or args.savegraphs or args.graphs:
         plt.show()
     if args.debug:
         t_fin = time.time()
-        print "finished making graphs in: %s seconds." % (t_fin-t_start)
+        print "finished making graphs in: %8.2f seconds." % (t_fin-t_start)
 
 
