@@ -168,23 +168,24 @@ d_pos = {
 }
 
 # Dictionary with the parameters for the various graphs.
+# figure number, graph type, name, y-axis, x-axis, title, bins, normalized
 d_figs = {
-    'cpu_usage': [0,'hist','cpu_usage','Number of Jobs','CPU Usage (hours per job)','Histogram of CPU Usage',range(0,720,1)],
-    'runtime': [1,'hist','runtime','Number of Jobs','Wall Clock Time (sec per job)','Histogram of Job Run Times',range(0,2592000,60)],
-    'mem_reserved': [2,'hist','mem_reserved','Number of Jobs','Memory Reserved (GB per core)','Histogram of Memory Reservations',range(0,96,2)],
-    'mem_used': [3,'hist','mem_used','Number of Jobs','Memory Used (GB per job)','Histogram of Memory Usage',range(0,64,1)],
-    'ncpu': [4,'hist','number_cores','Number of Jobs','Number of Cores Reserved','Histogram of Core Reservation',range(1,128,1)],
-    'eff': [5,'hist','efficiency','Number of Jobs','Job Efficiency ((CPU Usage*Cores)/RunTime)','Histogram of Job Efficiency',range(10,500,20)],
-    'memdelta': [6,'hist','mem_delta','Number of Jobs','(Mem. Reserved) - (Mem. Used)','Histogram of Memory Efficiency',range(-8,64,2)],
-    'memscat': [7,'scatter','mem_scat','Mem. Used (MB)','Mem. Reserved (MB)','Scatter Plot of Memory Efficiency'],
-    'totovrun': [8,'hist','totovrun','Number of Jobs','Total (Run+Pend+Susp) / Run ','Histogram of Runtime Efficiency',np.arange(0,10,0.1)],
-    'suspovrun': [9,'hist','suspovrun','Number of Jobs','Susp+Run / Run ','Histogram of Suspension Ratios',np.arange(0,10,0.1)]
+    'cpu_usage': [0,'hist','cpu_usage','Number of Jobs','CPU Usage (hours per job)','Histogram of CPU Usage',range(0,720,1),False],
+    'runtime': [1,'hist','runtime','Number of Jobs','Wall Clock Time (sec per job)','Histogram of Job Run Times',range(0,2592000,60),False],
+    'mem_reserved': [2,'hist','mem_reserved','Number of Jobs','Memory Reserved (GB per core)','Histogram of Memory Reservations',range(0,96,2),False],
+    'mem_used': [3,'hist','mem_used','Number of Jobs','Memory Used (GB per job)','Histogram of Memory Usage',range(0,64,1),False],
+    'ncpu': [4,'bar','number_cores','Number of Jobs','Number of Cores Reserved','Histogram of Core Reservation',range(1,128,1),False],
+    'eff': [5,'hist','efficiency','Number of Jobs','Job Efficiency ((CPU Usage*Cores)/RunTime)','Histogram of Job Efficiency',range(10,500,20),False],
+    'memdelta': [6,'hist','mem_delta','Number of Jobs','(Mem. Reserved) - (Mem. Used)','Histogram of Memory Efficiency',range(-8,64,2),False],
+    'memscat': [7,'scatter','mem_scat','Mem. Used (MB)','Mem. Reserved (MB)','Scatter Plot of Memory Efficiency',False,False],
+    'runpct': [8,'hist','runpct','Number of Jobs','Run / Total','Histogram of Percent of time spent in RUN',range(0,500,10),False],
+    'susppct': [9,'hist','susppct','Number of Jobs','Susp+Run / Run ','Histogram of Percent of time spent in SSUSP',range(0,500,10),False]
     }
 
 d_fig_groups = {
     'cpu': ['cpu_usage','runtime','ncpu','eff'],
     'memory': ['mem_reserved','mem_used','memdelta','memscat'],
-    'suspend': ['totovrun','suspovrun']
+    'suspend': ['runpct','susppct']
     }
 
 def makeintorzero(v):
@@ -230,7 +231,7 @@ def create_filtered_list(datafile,d_args):
         qnames   = d_queues['contrib']
     elif d_args['q'] and d_args['q'] == "shared":
         qnames   = d_queues['shared']
-    elif d_args['q'][-1] == '*':
+    elif d_args['q'] and d_args['q'][-1] == '*':
         q_regex = True
         q_pattern = d_args['q'][:-1] 
         qnames = d_args['q'].split(",")
@@ -315,8 +316,8 @@ def calc(data_bin):
         d_calc['memdelta'].append(m_rsv-m_used)
         d_calc['memscat'].append([m_rsv,m_used/1048576.0])
         if run_t > 0:
-            d_calc['totovrun'].append((pend_t+psusp_t+run_t+ususp_t+ssusp_t)/float(run_t))
-            d_calc['suspovrun'].append((ssusp_t+run_t)/float(run_t))
+            d_calc['runpct'].append(float(run_t)/float(pend_t+psusp_t+ususp_t+ssusp_t+run_t)*100)
+            d_calc['susppct'].append(float(ssusp_t)/(ssusp_t+run_t)*100)
     gc.enable()
     return d_calc
 
@@ -385,17 +386,13 @@ def draw_hist(l_input,user,l_result,save):
     figtit = '%s - (source: %s)\nFilters: %s' % (l_input[5],args.infile, filter_names)
     figdata = l_result
     figbins = l_input[6]
-#    figxticks = l_input[8]
+    fignorm = l_input[7]
     plt.figure(fignum)
     plt.ylabel(figylab)
     plt.xlabel(figxlab)
     plt.grid(True)
     plt.suptitle(figtit)
-#    if figxticks:
-#        plt.xticks(figxticks)
-#    if figbins == "auto":
-#        plt.hist(figdata, bins=len(set(figdata)))
-    plt.hist(figdata, bins=figbins)
+    plt.hist(figdata, bins=figbins, normed=fignorm)
     plt.draw()
     if save:
         plt.savefig(figfile, dpi=300)
@@ -410,23 +407,22 @@ def draw_bar(l_input,user,l_result,save):
     figtit  = '%s - (source: %s)\nFilters: %s' % (l_input[5],args.infile, filter_names)
     figdata = l_result
     figbins = l_input[6]
-    figdata_y, figdata_x = np.histogram(figdata, bins=figbins)
+    fignorm = l_input[7]
+    if fignorm:
+        figdata_y, figdata_x = np.histogram(figdata, bins=figbins, density=True)
+    elif not fignorm:
+        figdata_y, figdata_x = np.histogram(figdata, bins=figbins)
     figdata_x = figdata_x[:-1]
+    if fignorm:
+        figdata_y *= 100
     plt.figure(fignum)
     plt.ylabel(figylab)
     plt.xlabel(figxlab)
     plt.grid(True)
     plt.suptitle(figtit)
-    binlen = len(figdata_x)
-    binwidth = 1.0/binlen
-#    plt.xticks(range(int(figdata_x[0]),int(figdata_x[-1]),int((figdata_x[-1]-figdata_x[0])/len(figdata_x))),figdata_x)
-#    plt.xticks(range(int(figdata_x[0]),int(figdata_x[-1]),int((figdata_x[-1]-figdata_x[0])/len(figdata_x))))
-    plt.xticks(figdata_x)
-    plt.xlim(figdata_x[0],figdata_x[-1])
-    barwidth = float(((figdata_x[-1]-figdata_x[0])/len(figdata_x))/2)
-    plt.bar(figdata_x,figdata_y,width=barwidth,align='edge')
-#    plt.bar(figdata_x,figdata_y,width=1.0,align='center')
-#    plt.bar(range(len(figdata_x)),figdata_y,width=1.0,align='center')
+#    plt.xlim(figdata_x[0],figdata_x[-1])
+#    barwidth = float(((figdata_x[-1]-figdata_x[0])/len(figdata_x))/2)
+    plt.bar(figdata_x,figdata_y)
     plt.draw()
     if save:
         plt.savefig(figfile, dpi=300)
