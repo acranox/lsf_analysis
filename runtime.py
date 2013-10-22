@@ -335,9 +335,11 @@ def filter_string(argdict):
     if argdict['maxrun']:
         l_args.append('Max. Runtime: %s' % argdict['maxrun'])
     if argdict['exitzero']:
-        l_args.append('Exclude Non-Zero exit values')
-    if len(l_args) == 0:
-        s_filter = "None"
+        l_args.append('Exclude jobs w/ non-zero exit values')
+    if argdict['nojobdepend']:
+        l_args.append('Exclude jobs w/ dependencies')
+     if len(l_args) == 0:
+        s_filter = "No data filters applied"
     else:
         s_filter = ", ".join(l_args)
     return s_filter 
@@ -386,7 +388,7 @@ def draw_hist(l_input,user,l_result,save):
     figfile = make_out_fn('%s_%s.png' % (user,l_input[2]))
     figylab = l_input[3]
     figxlab = l_input[4]
-    figtit = '%s - (source: %s)\nFilters: %s' % (l_input[5],args.infile, filter_names)
+    figtit = '%s - (source: %s)\n%s' % (l_input[5],args.infile, filter_names)
     figdata = l_result
     figbins = l_input[6]
     fignorm = l_input[7]
@@ -409,7 +411,7 @@ def draw_bar(l_input,user,l_result,save):
     figfile = make_out_fn('%s_%s.png' % (user,l_input[2]))
     figylab = l_input[3]
     figxlab = l_input[4]
-    figtit  = '%s - (source: %s)\nFilters: %s' % (l_input[5],args.infile, filter_names)
+    figtit  = '%s - (source: %s)\n%s' % (l_input[5],args.infile, filter_names)
     figdata = l_result
     figbins = l_input[6]
     fignorm = l_input[7]
@@ -440,7 +442,7 @@ def draw_scatter(l_input,user,l_result,save):
     figfile = make_out_fn('%s_%s.png' % (user,l_input[2]))
     figylab = l_input[3]
     figxlab = l_input[4]
-    figtit  = '%s - (source: %s)\nFilters: %s' % (l_input[5],args.infile, filter_names)
+    figtit  = '%s - (source: %s)\n%s' % (l_input[5],args.infile, filter_names)
     figdata_x,figdata_y = zip(*l_result)
     plt.figure(fignum)
     plt.ylabel(figylab)
