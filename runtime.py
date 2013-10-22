@@ -430,12 +430,11 @@ def make_graphs(user,d_uresults):
             draw_hist(d_figs[graph],user,d_uresults[graph],args.savegraphs)
         elif d_figs[graph][1] == "bar":
             draw_bar(d_figs[graph],user,d_uresults[graph],args.savegraphs)
-    if args.showgraphs or args.graphs:
-        plt.show()
     if args.debug:
         t_fin = time.time()
         print "finished making graphs in: %8.2f seconds." % (t_fin-t_start)
-
+    if args.showgraphs or args.graphs:
+        plt.show()
 
 u_merged    = []
 d_args      = args.__dict__
