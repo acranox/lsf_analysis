@@ -39,34 +39,36 @@ if len(sys.argv) <= 1:
     print usage_info
     exit()
 
-parser = argparse.ArgumentParser(description=usage_info)
+parser = argparse.ArgumentParser(description=usage_info, formatter_class=argparse.RawTextHelpFormatter)
 
-parser.add_argument('--users', '-u',
-                type=str,
-                dest='u',
-                help='The user ids to look for(comma separated list)')
-
-parser.add_argument('--queues', '-q',
-                type=str,
-                dest='q',
-                help='The queue to look for(comma separated list) (also excepts ONLY ONE of: contrib,shared,all')
-
-parser.add_argument('--infile', '-i',
+parser.add_argument('--infile',
                 type=str,
                 dest='infile',
                 help='input file (required)')
 
-parser.add_argument('--minrun', '-m',
+parser.add_argument('--users',
+                type=str,
+                dest='u',
+                help='list of users (comma separated)')
+
+parser.add_argument('--queues',
+                type=str,
+                dest='q',
+                help='''Either: a list of queues (comma separated)
+or one(1) of: contrib,shared,all
+or a queue name with a wildcard as the last character, ie: sysbio*''')
+
+parser.add_argument('--minrun',
                 type=int,
                 dest='minrun',
-                help='minumum runtime')
+                help='minumum runtime (seconds)')
 
-parser.add_argument('--maxrun', '-x',
+parser.add_argument('--maxrun',
                 type=int,
                 dest='maxrun',
-                help='maximum runtime')
+                help='maximum runtime (seconds)')
 
-parser.add_argument('--exitzero', '-z',
+parser.add_argument('--exitzero',
                 action="store_true",
                 dest='exitzero',
                 help='only include jobs that had an exit status of 0 (zero)')
@@ -74,14 +76,14 @@ parser.add_argument('--exitzero', '-z',
 parser.add_argument('--nojobdepend',
                 action="store_true",
                 dest='nojobdepend',
-                help='exclude jobs with job dependencies')
+                help='exclude jobs with dependencies')
 
 parser.add_argument('--nosumusers',
                 action="store_true",
                 dest='nosumusers',
-                help='generate totals for each user, instead of processing them collectively (includes graphs and csv output)')
+                help='''generate totals for each user, instead of processing them collectively (includes graphs and csv output)''')
 
-parser.add_argument('--graphs', '-g',
+parser.add_argument('--graphs',
                 type=str,
                 dest='graphs',
                 help='''one or more of: all,cpu,memory,suspend''')
@@ -89,14 +91,14 @@ parser.add_argument('--graphs', '-g',
 parser.add_argument('--savegraphs',
                 action="store_true",
                 dest='savegraphs',
-                help='save graphs (defaults to current working directory)')
+                help='''save graphs as PNG files''')
 
 parser.add_argument('--showgraphs',
                 action="store_true",
                 dest='showgraphs',
-                help='display interactive graphs')
+                help='''display graphs interactively''')
 
-parser.add_argument('--csv', '-c',
+parser.add_argument('--csv',
                 action="store_true",
                 dest='csv',
                 help='output to csv files')
@@ -106,20 +108,21 @@ parser.add_argument('--quiet',
                 dest='quiet',
                 help='do not print results to stdout.  for use with --csv, or --savegraphs')
 
+parser.add_argument('--outdir',
+                type=str,
+                dest='outdir',
+                help='''the output directory for saving csv and png files''')
+
+parser.add_argument('--prefix',
+                type=str,
+                dest='prefix',
+                help='''a optional file name prefix for csv and png files''')
+
 parser.add_argument('--debug',
                 action="store_true",
                 dest='debug',
                 help='print timing info for debugging purposes')
 
-parser.add_argument('--outdir', '-o',
-                type=str,
-                dest='outdir',
-                help='''the output directory for saving csv and png files''')
-
-parser.add_argument('--prefix', '-p',
-                type=str,
-                dest='prefix',
-                help='''a optional file name prefix for csv and png files''')
 
 
 
