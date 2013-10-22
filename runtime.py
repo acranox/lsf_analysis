@@ -234,7 +234,7 @@ def create_filtered_list(datafile,d_args):
         elif not d_args['exitzero'] and d_args['nojobdepend']:
             if ufilt and qfilt and run_t >= minrun and run_t <= maxrun and depend == 'nojobdepend':
                 d_filt_result['jobs'].append(line)
-        elif not d_args['exitzero'] and d_args['nojobdepend']:
+        elif not d_args['exitzero'] and not d_args['nojobdepend']:
             if ufilt and qfilt and run_t >= minrun and run_t <= maxrun:
                 d_filt_result['jobs'].append(line)
     d_filt_result['u'] = list(set(u_list))
