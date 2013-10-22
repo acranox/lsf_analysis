@@ -191,6 +191,15 @@ def mungemrsv(m):
        m = m/1048576
     return m
 
+def make_out_fn(out_fn):
+    if args.prefix:
+        out_fn      = args.prefix+out_fn
+    if args.outdir:
+        if not os.path.exists(args.outdir):
+            os.makedirs(args.outdir)
+        out_fn      = args.outdir+"/"+out_fn
+    return out_fn
+
 def create_filtered_list(datafile,d_args):
     '''Create a list from the input file, filterd based on arguments'''
     gc.disable()
@@ -340,14 +349,7 @@ def new_print_results(user,d_results):
 
 def make_csv(user,d_results):
     for metric in d_results.keys():
-        if args.prefix:
-            out_fn      = args.prefix+user+"_"+metric+".csv"
-        else:
-            out_fn      = user+"_"+metric+".csv"
-        if args.outdir:
-            if not os.path.exists(args.outdir):
-                os.makedirs(args.outdir)
-            out_fn      = args.outdir+"/"+out_fn
+        out_fn      = make_out_fn(user+"_"+metric+".csv")
         out_fh      = open(out_fn, 'w')
         out_csv     = csv.writer(out_fh, delimiter='\n')
         out_fh.write("%s,%s\n" % (user,metric))
@@ -358,7 +360,7 @@ def make_csv(user,d_results):
 def draw_hist(l_input,user,l_result,save):
     fignum = l_input[0]
     figname = l_input[2]
-    figfile = '%s_%s.png' % (user,l_input[2])
+    figfile = make_out_fn('%s_%s.png' % (user,l_input[2]))
     figylab = l_input[3]
     figxlab = l_input[4]
     figtit = '%s - (source: %s)\nFilters: %s' % (l_input[5],args.infile, filter_names)
@@ -383,7 +385,7 @@ def draw_hist(l_input,user,l_result,save):
 # Functions for creating a bar graph
 def draw_bar(l_input,user,l_result,save):
     fignum  = l_input[0]
-    figfile = '%s_%s.png' % (user,l_input[2])
+    figfile = make_out_fn('%s_%s.png' % (user,l_input[2]))
     figylab = l_input[3]
     figxlab = l_input[4]
     figtit  = '%s - (source: %s)\nFilters: %s' % (l_input[5],args.infile, filter_names)
@@ -414,7 +416,7 @@ def draw_bar(l_input,user,l_result,save):
 # Function for drawing a Scatter plot
 def draw_scatter(l_input,user,l_result,save):
     fignum  = l_input[0]
-    figfile = '%s_%s.png' % (user,l_input[2])
+    figfile = make_out_fn('%s_%s.png' % (user,l_input[2]))
     figylab = l_input[3]
     figxlab = l_input[4]
     figtit  = '%s - (source: %s)\nFilters: %s' % (l_input[5],args.infile, filter_names)
