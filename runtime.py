@@ -218,10 +218,10 @@ def create_filtered_list(datafile,d_args):
         else:
             qfilt = False
         if d_args['exitzero']:
-            if ufilt and qfilt and exitstatus == 0:
+            if ufilt and qfilt and run_t >= minrun and run_t <= maxrun and exitstatus == 0:
                 d_filt_result['jobs'].append(line)
         elif not d_args['exitzero']:
-            if ufilt and qfilt:
+            if ufilt and qfilt and run_t >= minrun and run_t <= maxrun:
                 d_filt_result['jobs'].append(line)
     d_filt_result['u'] = list(set(u_list))
     d_filt_result['q'] = list(set(q_list))
