@@ -182,6 +182,7 @@ d_figs = {
     'susppct': [9,'hist','susppct','Number of Jobs','Susp+Run / Run ','Histogram of Percent of time spent in SSUSP',range(0,500,10),False]
     }
 
+# Dictionary for groups of graphs, to simplify argument handling.
 d_fig_groups = {
     'cpu': ['cpu_usage','runtime','ncpu','eff'],
     'memory': ['mem_reserved','mem_used','memdelta','memscat'],
@@ -205,6 +206,7 @@ def mungemrsv(m):
     return m
 
 def make_out_fn(out_fn):
+    '''Set the output file path and file name based on the outdir and prefix arguments'''
     if args.prefix:
         out_fn      = args.prefix+"_"+out_fn
     if args.outdir:
@@ -286,11 +288,11 @@ def create_filtered_list(datafile,d_args):
     return d_filt_result
 
 def calc(data_bin):
+    ''' Build lists of the key data using the filtered input'''
     gc.disable()
     result      = data_bin
     d_calc      = dict((key,[]) for key in d_figs.keys())
     for line in result:
-#        print line
 #        jid     = line[0]
         u       = line[1]
 #        exit    = line[2]
