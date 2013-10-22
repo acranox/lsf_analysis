@@ -71,6 +71,11 @@ parser.add_argument('--exitzero', '-z',
                 dest='exitzero',
                 help='exclude jobs with non-zero exit codes')
 
+parser.add_argument('--nojobdepend',
+                action="store_true",
+                dest='nojobdepend',
+                help='exclude jobs with job dependencies')
+
 parser.add_argument('--nosumusers',
                 action="store_true",
                 dest='nosumusers',
@@ -209,6 +214,7 @@ def create_filtered_list(datafile,d_args):
         exitstatus      = int(line[2])
         queue           = str(line[3])
         run_t           = int(line[11])
+        depend          = str(line[15])
         u_list.append(user)
         q_list.append(queue)
         if user in unames or not unames:
@@ -219,10 +225,16 @@ def create_filtered_list(datafile,d_args):
             qfilt = True
         else:
             qfilt = False
-        if d_args['exitzero']:
+        if d_args['exitzero'] and d_args['nojobdepend']:
+            if ufilt and qfilt and run_t >= minrun and run_t <= maxrun and exitstatus == 0 and depend == 'nojobdepend':
+                d_filt_result['jobs'].append(line)
+        elif d_args['exitzero'] and not d_args['nojobdepend']:
             if ufilt and qfilt and run_t >= minrun and run_t <= maxrun and exitstatus == 0:
                 d_filt_result['jobs'].append(line)
-        elif not d_args['exitzero']:
+        elif not d_args['exitzero'] and d_args['nojobdepend']:
+            if ufilt and qfilt and run_t >= minrun and run_t <= maxrun and depend == 'nojobdepend':
+                d_filt_result['jobs'].append(line)
+        elif not d_args['exitzero'] and d_args['nojobdepend']:
             if ufilt and qfilt and run_t >= minrun and run_t <= maxrun:
                 d_filt_result['jobs'].append(line)
     d_filt_result['u'] = list(set(u_list))
