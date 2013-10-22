@@ -49,7 +49,7 @@ parser.add_argument('--users', '-u',
 parser.add_argument('--queues', '-q',
                 type=str,
                 dest='q',
-                help='The queue to look for(comma separated list)')
+                help='The queue to look for(comma separated list) (also excepts ONLY ONE of: contrib,shared,all')
 
 parser.add_argument('--infile', '-i',
                 type=str,
@@ -217,6 +217,7 @@ def create_filtered_list(datafile,d_args):
     d_filt_result   = {'jobs':[]}
     u_list          = []
     q_list          = []
+    q_regex         = False
     # create default args, and parse the rest
     if d_args['u']:
         unames = d_args['u'].split(",")
@@ -226,6 +227,10 @@ def create_filtered_list(datafile,d_args):
         qnames   = d_queues['contrib']
     elif d_args['q'] and d_args['q'] == "shared":
         qnames   = d_queues['shared']
+    elif d_args['q'][-1] == '*':
+        q_regex = True
+        q_pattern = d_args['q'][:-1] 
+        qnames = d_args['q'].split(",")
     elif d_args['q']:
         qnames = d_args['q'].split(",")
     else:
@@ -254,19 +259,20 @@ def create_filtered_list(datafile,d_args):
             ufilt = False
         if queue in qnames or not qnames:
             qfilt = True
+        elif q_regex and queue.startswith(q_pattern):
+            qfilt = True
         else:
             qfilt = False
-        if d_args['exitzero'] and d_args['nojobdepend']:
-            if ufilt and qfilt and run_t >= minrun and run_t <= maxrun and exitstatus == 0 and depend == 'nojobdepend':
-                d_filt_result['jobs'].append(line)
-        elif d_args['exitzero'] and not d_args['nojobdepend']:
-            if ufilt and qfilt and run_t >= minrun and run_t <= maxrun and exitstatus == 0:
-                d_filt_result['jobs'].append(line)
-        elif not d_args['exitzero'] and d_args['nojobdepend']:
-            if ufilt and qfilt and run_t >= minrun and run_t <= maxrun and depend == 'nojobdepend':
-                d_filt_result['jobs'].append(line)
-        elif not d_args['exitzero'] and not d_args['nojobdepend']:
-            if ufilt and qfilt and run_t >= minrun and run_t <= maxrun:
+        if d_args['exitzero'] and exitstatus != 0:
+            exfilt = False
+        else:
+            exfilt = True
+        if d_args['nojobdepend'] and depend != 'nojobdepend':
+            depfilt = False
+        else:
+            depfilt = True
+
+        if ufilt and qfilt and exfilt and depfilt and run_t >= minrun and run_t <= maxrun:
                 d_filt_result['jobs'].append(line)
     d_filt_result['u'] = list(set(u_list))
     d_filt_result['q'] = list(set(q_list))
@@ -305,8 +311,9 @@ def calc(data_bin):
         d_calc['eff'].append(eff)
         d_calc['memdelta'].append(m_rsv-m_used)
         d_calc['memscat'].append([m_rsv,m_used/1048576.0])
-        d_calc['totovrun'].append((pend_t+psusp_t+run_t+ususp_t+ssusp_t)/float(run_t))
-        d_calc['suspovrun'].append((ssusp_t+run_t)/float(run_t))
+        if run_t > 0:
+            d_calc['totovrun'].append((pend_t+psusp_t+run_t+ususp_t+ssusp_t)/float(run_t))
+            d_calc['suspovrun'].append((ssusp_t+run_t)/float(run_t))
     gc.enable()
     return d_calc
 
