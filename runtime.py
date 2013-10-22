@@ -170,16 +170,16 @@ d_pos = {
 # Dictionary with the parameters for the various graphs.
 # figure number, graph type, name, y-axis, x-axis, title, bins, normalized
 d_figs = {
-    'cpu_usage': [0,'hist','cpu_usage','Number of Jobs','CPU Usage (hours per job)','Histogram of CPU Usage',range(0,720,1),False],
-    'runtime': [1,'hist','runtime','Number of Jobs','Wall Clock Time (sec per job)','Histogram of Job Run Times',range(0,2592000,60),False],
-    'mem_reserved': [2,'hist','mem_reserved','Number of Jobs','Memory Reserved (GB per core)','Histogram of Memory Reservations',range(0,96,2),False],
-    'mem_used': [3,'hist','mem_used','Number of Jobs','Memory Used (GB per job)','Histogram of Memory Usage',range(0,64,1),False],
-    'ncpu': [4,'bar','number_cores','Number of Jobs','Number of Cores Reserved','Histogram of Core Reservation',range(1,128,1),False],
-    'eff': [5,'hist','efficiency','Number of Jobs','Job Efficiency ((CPU Usage*Cores)/RunTime)','Histogram of Job Efficiency',range(10,500,20),False],
-    'memdelta': [6,'hist','mem_delta','Number of Jobs','(Mem. Reserved) - (Mem. Used)','Histogram of Memory Efficiency',range(-8,64,2),False],
-    'memscat': [7,'scatter','mem_scat','Mem. Used (MB)','Mem. Reserved (MB)','Scatter Plot of Memory Efficiency',False,False],
-    'runpct': [8,'hist','runpct','Number of Jobs','Run / Total','Histogram of Percent of time spent in RUN',range(0,500,10),False],
-    'susppct': [9,'hist','susppct','Number of Jobs','Susp+Run / Run ','Histogram of Percent of time spent in SSUSP',range(0,500,10),False]
+    'cpu_usage': [0,'hist','cpu_usage','Number of Jobs','CPU Usage (hours per job)','Histogram of CPU Usage',range(0,720,1),False,range(0,720,1)],
+    'runtime': [1,'hist','runtime','Number of Jobs','Wall Clock Time (sec per job)','Histogram of Job Run Times',range(0,2592000,60),False,range(0,2592000,60)],
+    'mem_reserved': [2,'hist','mem_reserved','Number of Jobs','Memory Reserved (GB per core)','Histogram of Memory Reservations',range(0,96,2),False,range(0,96,2)],
+    'mem_used': [3,'hist','mem_used','Number of Jobs','Memory Used (GB per job)','Histogram of Memory Usage',range(0,64,1),False,range(0,64,1)],
+    'ncpu': [4,'bar','number_cores','Number of Jobs','Number of Cores Reserved','Histogram of Core Reservation',range(1,128,1),False,range(1,128,1)],
+    'eff': [5,'hist','efficiency','Number of Jobs','Job Efficiency ((CPU Usage*Cores)/RunTime)','Histogram of Job Efficiency',range(10,500,20),False,range(10,500,20)],
+    'memdelta': [6,'hist','mem_delta','Number of Jobs','(Mem. Reserved) - (Mem. Used)','Histogram of Memory Efficiency',range(-8,64,2),False,range(-8,64,2)],
+    'memscat': [7,'scatter','mem_scat','Mem. Used (MB)','Mem. Reserved (MB)','Scatter Plot of Memory Efficiency',False,False,False],
+    'runpct': [8,'hist','runpct','Number of Jobs','Run / Total','Histogram of Percent of time spent in RUN',range(0,500,10),False,range(0,500,10)],
+    'susppct': [9,'hist','susppct','Number of Jobs','Susp+Run / Run ','Histogram of Percent of time spent in SSUSP',range(0,500,10),False,range(0,500,10)]
     }
 
 # Dictionary for groups of graphs, to simplify argument handling.
@@ -392,6 +392,8 @@ def draw_hist(l_input,user,l_result,save):
     figdata = l_result
     figbins = l_input[6]
     fignorm = l_input[7]
+    figxtik = l_input[8]
+    plt.xticks(figxtik)
     plt.figure(fignum)
     plt.ylabel(figylab)
     plt.xlabel(figxlab)
@@ -447,8 +449,8 @@ def draw_scatter(l_input,user,l_result,save):
     plt.figure(fignum)
     plt.ylabel(figylab)
     plt.xlabel(figxlab)
-#    plt.xlim(0,max(figdata_x+figdata_y))
-#    plt.ylim(0,max(figdata_x+figdata_y))
+    figxtik = l_input[8]
+    plt.xticks(figxtik)
     plt.xlim(0,max(figdata_y))
     plt.ylim(0,max(figdata_y))
     plt.grid(True)
