@@ -132,6 +132,14 @@ if args.infile and not os.path.isfile(args.infile):
     print "%s isn't a file!" % args.infile
     exit(1)
 
+# Load MatPlotLib if we're going to use it, and set the backend appropriately
+if args.savegraphs and not args.showgraphs:
+    import matplotlib
+    matplotlib.use("agg")
+    import matplotlib.pyplot as plt
+elif not args.savegraphs and args.showgraphs or args.graphs:
+    import matplotlib.pyplot as plt
+
 # Queue definitions
 d_queues   = {
     'contrib': ['church_int_15m','danuser_int_15m','freedberg_int_15m','i2b2_int_15m','megason_int_15m','merfeld_int_15m','nezafat_int_15m','nowak_int_15m','park_int_15m','sorger_int_15m','sysbio_int_15m','usheva_int_15m','church_int_2h','danuser_int_2h','freedberg_int_2h','i2b2_int_2h','kreiman_int_2h','megason_int_2h','merfeld_int_2h','nezafat_int_2h','nowak_int_2h','park_int_2h','sorger_int_2h','sysbio_int_2h','usheva_int_2h','bpf_int_12h','cbi_int_12h','church_int_12h','danuser_int_7d','danuser_int_12h','freedberg_int_12h','i2b2_int_12h','kreiman_int_12h','megason_int_12h','merfeld_int_12h','nezafat_int_12h','nowak_int_12h','park_int_12h','sorger_int_2d','sysbio_int_2d','usheva_int_12h','bpf_15m','church_15m','danuser_15m','freedberg_15m','i2b2_15m','kreiman_15m','megason_15m','merfeld_15m','nezafat_15m','nowak_15m','park_15m','sorger_15m','sysbio_15m','usheva_15m','church_2h','danuser_2h','freedberg_2h','i2b2_2h','kreiman_2h','megason_2h','merfeld_2h','nezafat_2h','nowak_2h','park_2h','sorger_2h','sysbio_2h','usheva_2h','bpf_12h','cbi_12h','church_12h','danuser_12h','freedberg_12h','i2b2_12h','kreiman_12h','megason_12h','merfeld_12h','nezafat_12h','nowak_12h','park_12h','sorger_12h','sysbio_12h','usheva_12h','church_1d','danuser_1d','freedberg_1d','i2b2_1d','kreiman_1d','megason_1d','merfeld_1d','nezafat_1d','nowak_1d','park_1d','sorger_1d','sysbio_1d','usheva_1d','church_7d','danuser_7d','freedberg_7d','i2b2_7d','megason_7d','merfeld_7d','nezafat_7d','nowak_7d','park_7d','sorger_7d','sysbio_7d','usheva_7d','bpf_unlimited','cbi_unlimited','church_unlimited','danuser_unlimited','freedberg_unlimited','i2b2_unlimited','kreiman_unlimited','megason_unlimited','merfeld_unlimited','nezafat_unlimited','nowak_unlimited','park_unlimited','sorger_unlimited','sorger_par_unlimited','sorger_par_1d','sysbio_unlimited','sysbio_par_1d','usheva_unlimited','rodeo_15m','rodeo_12h','rodeo_unlimited','reich','seidman'],
@@ -442,11 +450,6 @@ def draw_scatter(l_input,user,l_result,save):
 def make_graphs(user,d_uresults):
     if args.debug:
         t_start = time.time()
-    if args.savegraphs and not args.showgraphs:
-        import matplotlib
-        matplotlib.use("agg")
-    global plt
-    import matplotlib.pyplot as plt
     if args.graphs == "all" or not args.graphs:
         l_graph = d_figs.keys()
     else:
@@ -502,7 +505,7 @@ if args.nosumusers:
         print "user,cpu_hours,numjobs"
     for user in u_dict.keys():
         d_uresult   = calc(u_dict[user])
-        if not args.csv:
+        if not args.csv and not args.quiet:
             new_print_results(user,d_uresult)
         elif args.csv:
             new_print_results(user,d_uresult)
@@ -510,10 +513,11 @@ if args.nosumusers:
             make_csv('total',d_umerged)
         if args.showgraphs or args.savegraphs or args.graphs:
             make_graphs(user,d_uresult)
-    new_print_results('total',d_umerged)
+    if not args.quiet:
+        new_print_results('total',d_umerged)
 elif not args.nosumusers:
     d_umerged = calc(u_merged)
-    if not args.csv:
+    if not args.csv and not args.quiet:
         new_print_results('total',d_umerged)
     elif args.csv:
         print "user,cpu_hours,numjobs"
