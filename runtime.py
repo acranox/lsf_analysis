@@ -193,7 +193,7 @@ def mungemrsv(m):
 
 def make_out_fn(out_fn):
     if args.prefix:
-        out_fn      = args.prefix+out_fn
+        out_fn      = args.prefix+"_"+out_fn
     if args.outdir:
         if not os.path.exists(args.outdir):
             os.makedirs(args.outdir)
