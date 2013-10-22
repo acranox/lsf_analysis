@@ -54,7 +54,7 @@ parser.add_argument('--queues', '-q',
 parser.add_argument('--infile', '-i',
                 type=str,
                 dest='infile',
-                help='input file')
+                help='input file (required)')
 
 parser.add_argument('--minrun', '-m',
                 type=int,
@@ -69,7 +69,7 @@ parser.add_argument('--maxrun', '-x',
 parser.add_argument('--exitzero', '-z',
                 action="store_true",
                 dest='exitzero',
-                help='exclude jobs with non-zero exit codes')
+                help='only include jobs that had an exit status of 0 (zero)')
 
 parser.add_argument('--nojobdepend',
                 action="store_true",
@@ -79,50 +79,47 @@ parser.add_argument('--nojobdepend',
 parser.add_argument('--nosumusers',
                 action="store_true",
                 dest='nosumusers',
-                help='if set, totals are calculated for each user, instead of processing them collectively')
+                help='generate totals for each user, instead of processing them collectively (includes graphs and csv output)')
 
 parser.add_argument('--graphs', '-g',
                 type=str,
                 dest='graphs',
-                help='''one or more of: all,runtime,ncpu,mem_reserved,cpu_usage,memdelta,eff,mem_used,memscat''')
+                help='''one or more of: all,cpu,memory,suspend''')
 
 parser.add_argument('--savegraphs',
                 action="store_true",
                 dest='savegraphs',
-                help='save graphs')
+                help='save graphs (defaults to current working directory)')
 
 parser.add_argument('--showgraphs',
                 action="store_true",
                 dest='showgraphs',
-                help='show graphs')
+                help='display interactive graphs')
 
 parser.add_argument('--csv', '-c',
                 action="store_true",
                 dest='csv',
-                help='output in csv format')
+                help='output to csv files')
 
 parser.add_argument('--quiet',
                 action="store_true",
                 dest='quiet',
-                help='supress certain output')
+                help='do not print results to stdout.  for use with --csv, or --savegraphs')
 
 parser.add_argument('--debug',
                 action="store_true",
                 dest='debug',
-                help='print timing info for debug purposes')
+                help='print timing info for debugging purposes')
 
 parser.add_argument('--outdir', '-o',
                 type=str,
                 dest='outdir',
-                help='''specify the output directory for saving csv and png files''')
+                help='''the output directory for saving csv and png files''')
 
 parser.add_argument('--prefix', '-p',
                 type=str,
                 dest='prefix',
-                help='''a file name prefix for csv and png files''')
-
-
-
+                help='''a optional file name prefix for csv and png files''')
 
 
 
@@ -181,7 +178,11 @@ d_figs = {
     'suspovrun': [9,'hist','suspovrun','Number of Jobs','Susp+Run / Run ','Histogram of Suspension Ratios',np.arange(0,10,0.1)]
     }
 
-
+d_fig_groups = {
+    'cpu': ['cpu_usage','runtime','ncpu','eff'],
+    'memory': ['mem_reserved','mem_used','memdelta','memscat'],
+    'suspend': ['totovrun','suspovrun']
+    }
 
 def makeintorzero(v):
     '''Convert a string into an int if possible, or set it to 0'''
@@ -448,12 +449,16 @@ def draw_scatter(l_input,user,l_result,save):
         plt.close()
 
 def make_graphs(user,d_uresults):
+    l_graph = []
     if args.debug:
         t_start = time.time()
     if args.graphs == "all" or not args.graphs:
         l_graph = d_figs.keys()
     else:
-        l_graph = args.graphs.split(",")
+        ggrp = args.graphs.split(",")
+        for gname in ggrp:
+            if gname in d_fig_groups.keys():
+                l_graph.extend(d_fig_groups[gname])             
     for graph in l_graph:
         if d_figs[graph][1] == "scatter":
             draw_scatter(d_figs[graph],user,d_uresults[graph],args.savegraphs)
