@@ -150,7 +150,9 @@ d_figs = {
     'ncpu': [4,'hist','number_cores','Number of Jobs','Number of Cores Reserved','Histogram of Core Reservation',range(1,128,1)],
     'eff': [5,'hist','efficiency','Number of Jobs','Job Efficiency ((CPU Usage*Cores)/RunTime)','Histogram of Job Efficiency',range(10,500,20)],
     'memdelta': [6,'hist','mem_delta','Number of Jobs','(Mem. Reserved) - (Mem. Used)','Histogram of Memory Efficiency',range(-8,64,2)],
-    'memscat': [7,'scatter','mem_scat','Mem. Used (MB)','Mem. Reserved (MB)','Scatter Plot of Memory Efficiency']
+    'memscat': [7,'scatter','mem_scat','Mem. Used (MB)','Mem. Reserved (MB)','Scatter Plot of Memory Efficiency'],
+    'totovrun': [8,'hist','totovrun','Number of Jobs','Total (Run+Pend+Susp) / Run ','Histogram of Runtime Efficiency',np.arange(0,10,0.1)],
+    'suspovrun': [9,'hist','suspovrun','Number of Jobs','Susp+Run / Run ','Histogram of Suspension Ratios',np.arange(0,10,0.1)]
     }
 
 
@@ -247,12 +249,11 @@ def calc(data_bin):
         c_used  = float(line[6])
         eff     = int(float(line[7]))
         n_cpu   = int(line[8])
-#        pend_t  = line[9]
-#        psusp_t = line[10]
+        pend_t  = int(line[9])
+        psusp_t = int(line[10])
         run_t   = int(line[11])
-#        run_t   = line[11]
-#        ususp_t = line[12]
-#        ssusp_t = line[13]
+        ususp_t = int(line[12])
+        ssusp_t = int(line[13])
 #        unk_t   = line[14]
 #        dep     = line[15]
         d_calc['cpu_usage'].append(c_used/3600.0)
@@ -263,6 +264,8 @@ def calc(data_bin):
         d_calc['eff'].append(eff)
         d_calc['memdelta'].append(m_rsv-m_used)
         d_calc['memscat'].append([m_rsv,m_used/1048576.0])
+        d_calc['totovrun'].append((pend_t+psusp_t+run_t+ususp_t+ssusp_t)/float(run_t))
+        d_calc['suspovrun'].append((ssusp_t+run_t)/float(run_t))
     gc.enable()
     return d_calc
 
@@ -342,10 +345,7 @@ def draw_hist(l_input,user,l_result,save):
 #        plt.xticks(figxticks)
 #    if figbins == "auto":
 #        plt.hist(figdata, bins=len(set(figdata)))
-    if figbins and figbins != "auto":
-        plt.hist(figdata, bins=figbins)
-    elif not figbins:
-        plt.hist(figdata)
+    plt.hist(figdata, bins=figbins)
     plt.draw()
     if save:
         plt.savefig(figfile, dpi=300)
@@ -360,10 +360,7 @@ def draw_bar(l_input,user,l_result,save):
     figtit  = '%s - (source: %s)\nFilters: %s' % (l_input[5],args.infile, filter_names)
     figdata = l_result
     figbins = l_input[6]
-    if figbins and figbins != "auto":    
-        figdata_y, figdata_x = np.histogram(figdata, bins=figbins)
-    elif not figbins or figbins == "auto":    
-        figdata_y, figdata_x = np.histogram(figdata)
+    figdata_y, figdata_x = np.histogram(figdata, bins=figbins)
     figdata_x = figdata_x[:-1]
     plt.figure(fignum)
     plt.ylabel(figylab)
