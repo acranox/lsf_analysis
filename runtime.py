@@ -378,6 +378,7 @@ def make_csv(user,d_results):
 
 # Functions for creating a histogram
 def draw_hist(l_input,user,l_result,save):
+    gc.disable()
     fignum = l_input[0]
     figname = l_input[2]
     figfile = make_out_fn('%s_%s.png' % (user,l_input[2]))
@@ -397,9 +398,11 @@ def draw_hist(l_input,user,l_result,save):
     if save:
         plt.savefig(figfile, dpi=300)
         plt.close()
+    gc.enable()
 
 # Functions for creating a bar graph
 def draw_bar(l_input,user,l_result,save):
+    gc.disable()
     fignum  = l_input[0]
     figfile = make_out_fn('%s_%s.png' % (user,l_input[2]))
     figylab = l_input[3]
@@ -426,10 +429,11 @@ def draw_bar(l_input,user,l_result,save):
     plt.draw()
     if save:
         plt.savefig(figfile, dpi=300)
-
+    gc.enable()
 
 # Function for drawing a Scatter plot
 def draw_scatter(l_input,user,l_result,save):
+    gc.disable()
     fignum  = l_input[0]
     figfile = make_out_fn('%s_%s.png' % (user,l_input[2]))
     figylab = l_input[3]
@@ -453,6 +457,7 @@ def draw_scatter(l_input,user,l_result,save):
     if save:
         plt.savefig(figfile, dpi=300)
         plt.close()
+    gc.enable()
 
 def make_graphs(user,d_uresults):
     l_graph = []
