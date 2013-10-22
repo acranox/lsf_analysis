@@ -111,6 +111,19 @@ parser.add_argument('--debug',
                 dest='debug',
                 help='print timing info for debug purposes')
 
+parser.add_argument('--outdir', '-o',
+                type=str,
+                dest='outdir',
+                help='''specify the output directory for saving csv and png files''')
+
+parser.add_argument('--prefix', '-p',
+                type=str,
+                dest='prefix',
+                help='''a file name prefix for csv and png files''')
+
+
+
+
 
 
 args = parser.parse_args()
@@ -247,8 +260,6 @@ def create_filtered_list(datafile,d_args):
 def calc(data_bin):
     gc.disable()
     result      = data_bin
-#    print result
-#    d_calc      = dict.fromkeys(d_figs.keys())
     d_calc      = dict((key,[]) for key in d_figs.keys())
     for line in result:
 #        print line
@@ -318,7 +329,6 @@ def create_dict(l_parsed):
     return q_dict, u_dict
 
 def new_print_results(user,d_results):
-#    print d_results['cpu_usage']
     if not args.csv:
         n_jobs      = len(d_results['cpu_usage'])
         c_total     = sum(d_results['cpu_usage'])
@@ -330,7 +340,14 @@ def new_print_results(user,d_results):
 
 def make_csv(user,d_results):
     for metric in d_results.keys():
-        out_fn      = user+"_"+metric+".csv"
+        if args.prefix:
+            out_fn      = args.prefix+user+"_"+metric+".csv"
+        else:
+            out_fn      = user+"_"+metric+".csv"
+        if args.outdir:
+            if not os.path.exists(args.outdir):
+                os.makedirs(args.outdir)
+            out_fn      = args.outdir+"/"+out_fn
         out_fh      = open(out_fn, 'w')
         out_csv     = csv.writer(out_fh, delimiter='\n')
         out_fh.write("%s,%s\n" % (user,metric))
