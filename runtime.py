@@ -338,7 +338,7 @@ def filter_string(argdict):
         l_args.append('Exclude jobs w/ non-zero exit values')
     if argdict['nojobdepend']:
         l_args.append('Exclude jobs w/ dependencies')
-     if len(l_args) == 0:
+    if len(l_args) == 0:
         s_filter = "No data filters applied"
     else:
         s_filter = ", ".join(l_args)
