@@ -428,8 +428,6 @@ def draw_bar(l_input,user,l_result,save):
     plt.xlabel(figxlab)
     plt.grid(True)
     plt.suptitle(figtit)
-#    plt.xlim(figdata_x[0],figdata_x[-1])
-#    barwidth = float(((figdata_x[-1]-figdata_x[0])/len(figdata_x))/2)
     plt.bar(figdata_x,figdata_y)
     plt.draw()
     if save:
@@ -453,8 +451,6 @@ def draw_scatter(l_input,user,l_result,save):
     plt.ylim(0,max(figdata_y))
     plt.grid(True)
     plt.suptitle(figtit)
-#    plt.xlim(figdata_x[0],figdata_x[-1])
-#    plt.axes().set_aspect('equal', adjustable='datalim', anchor='SW')
     plt.scatter(figdata_x,figdata_y,c='b',marker='.')
     plt.plot([0,100],[0,100])
     plt.draw()
