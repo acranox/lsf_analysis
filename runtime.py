@@ -315,7 +315,7 @@ def calc(data_bin):
         d_calc['mem_used'].append(m_used/1048576.0)
         d_calc['ncpu'].append(n_cpu)
         d_calc['eff'].append(eff)
-        d_calc['memdelta'].append(m_rsv-m_used)
+        d_calc['memdelta'].append(m_rsv-(m_used/1048576.0))
         d_calc['memscat'].append([m_rsv,m_used/1048576.0])
         if run_t > 0:
             d_calc['runpct'].append(float(run_t)/float(pend_t+psusp_t+ususp_t+ssusp_t+run_t)*100)
