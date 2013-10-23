@@ -177,7 +177,7 @@ d_figs = {
     'ncpu': [4,'bar','number_cores','Number of Jobs','Number of Cores Reserved','Histogram of Core Reservation',range(1,128,1),False,False],
     'eff': [5,'hist','efficiency','Number of Jobs','Job Efficiency ((CPU Usage*Cores)/RunTime)','Histogram of Job Efficiency',range(10,500,20),False,False],
     'memdelta': [6,'hist','mem_delta','Number of Jobs','(Mem. Reserved) - (Mem. Used)','Histogram of Memory Efficiency',range(-8,64,2),False,False],
-    'memscat': [7,'scatter','mem_scat','Mem. Used (MB)','Mem. Reserved (MB)','Scatter Plot of Memory Efficiency',False,False,False],
+    'memscat': [7,'scatter','mem_scat','Mem. Used (GB)','Mem. Reserved (GB)','Scatter Plot of Memory Efficiency',False,False,False],
     'runpct': [8,'hist','runpct','Number of Jobs','Run / Total','Histogram of Percent of time spent in RUN',range(0,500,10),False,False],
     'susppct': [9,'hist','susppct','Number of Jobs','Susp+Run / Run ','Histogram of Percent of time spent in SSUSP',range(0,500,10),False,False]
     }
