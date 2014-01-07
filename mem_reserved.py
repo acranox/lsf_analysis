@@ -71,7 +71,11 @@ def make_user_dicts(list_of_jobs):
     return d_userjobs
 
 def read_user_jobs(l_userjobs):
-    l_badjobs   = []
+    l_range1   = []
+    l_range2   = []
+    l_range3   = []
+    l_range4   = []
+    l_range5   = []
     for line in l_userjobs:
         jobid   = int(line[0])
         indexid = int(line[1])
@@ -82,9 +86,18 @@ def read_user_jobs(l_userjobs):
             m_rsv   = 2097152
         else:
             m_rsv   = int(line[5])
-        if (m_rsv*n_cpu)/10 > m_used:
-            l_badjobs.append(line)
-    return l_badjobs
+        if m_used < int((m_rsv*n_cpu)*.10):
+            l_range1.append(line)
+        elif m_used >= int((m_rsv*n_cpu)*.10) and m_used < int((m_rsv*n_cpu)*.30): 
+            l_range2.append(line)
+        elif m_used >= int((m_rsv*n_cpu)*.30) and m_used < int((m_rsv*n_cpu)*.50): 
+            l_range3.append(line)
+        elif m_used >= int((m_rsv*n_cpu)*.50) and m_used < int((m_rsv*n_cpu)*.80): 
+            l_range4.append(line)
+        elif m_used >= int((m_rsv*n_cpu)*.80):
+            l_range5.append(line)
+
+    return l_range1, l_range2, l_range3, l_range4, l_range5
 
 #build_list(args.infile)
 l_jobs      = read_tsv(args.infile)
@@ -93,7 +106,12 @@ d_user_badjobs  = {}
 for user in d_userjobs.keys():
     d_user_badjobs[user]    = read_user_jobs(d_userjobs[user])
 
+print "user         -  <10%  - 10-30% - 30-50% - 50-80% - >80%"
 for user in d_user_badjobs.keys():
-    numjobs = len(d_user_badjobs[user]) 
-    if numjobs > 0:
-        print "%-4s - %s" % (user, numjobs)
+    n1 = len(d_user_badjobs[user][0])
+    n2 = len(d_user_badjobs[user][1])
+    n3 = len(d_user_badjobs[user][2])
+    n4 = len(d_user_badjobs[user][3])
+    n5 = len(d_user_badjobs[user][4])
+    if sum([n1,n2,n3,n4,n5]) > 10:
+        print "%-12s - %-6d - %-6d - %-6d - %-6d - %-6d" % (user, n1, n2, n3, n4, n5)
