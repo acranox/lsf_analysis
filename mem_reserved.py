@@ -15,6 +15,7 @@ import argparse
 import sys
 import os
 import csv
+import numpy as np
 
 usage_info = '''usage: %s <options>
 at a minimum, specify --infile <file>''' % sys.argv[0]
@@ -61,57 +62,48 @@ def read_tsv(input_file):
     return l_jobs
 
 def make_user_dicts(list_of_jobs):
-    d_userjobs  = {}
+    d_results   = {}
     for line in list_of_jobs[1:]:
-        user    = str(line[2])
-        if d_userjobs.has_key(user):
-            d_userjobs[user].append(line)
-        elif not d_userjobs.has_key(user):
-            d_userjobs[user] = [line]
-    return d_userjobs
-
-def read_user_jobs(l_userjobs):
-    l_range1   = []
-    l_range2   = []
-    l_range3   = []
-    l_range4   = []
-    l_range5   = []
-    for line in l_userjobs:
         jobid   = int(line[0])
         indexid = int(line[1])
         user    = str(line[2])
-        n_cpu   = int(line[3])
+        n_cpu   = float(line[3])
         m_used  = int(line[4])
-        if int(line[5]) == 0:
-            m_rsv   = 2097152
-        else:
-            m_rsv   = int(line[5])
-        if m_used < int((m_rsv*n_cpu)*.10):
-            l_range1.append(line)
-        elif m_used >= int((m_rsv*n_cpu)*.10) and m_used < int((m_rsv*n_cpu)*.30): 
-            l_range2.append(line)
-        elif m_used >= int((m_rsv*n_cpu)*.30) and m_used < int((m_rsv*n_cpu)*.50): 
-            l_range3.append(line)
-        elif m_used >= int((m_rsv*n_cpu)*.50) and m_used < int((m_rsv*n_cpu)*.80): 
-            l_range4.append(line)
-        elif m_used >= int((m_rsv*n_cpu)*.80):
-            l_range5.append(line)
+        m_rsv   = int(line[5])
+        if m_rsv == 0:
+            jratio  = (m_used/(2097152*n_cpu))
+            if d_results.has_key(user+".default"):
+                d_results[user+".default"].append(jratio)
+            elif not d_results.has_key(user+".default"):
+                d_results[user+".default"] = [jratio]
+        elif m_rsv > 524288:
+            jratio  = (m_used/(m_rsv*n_cpu))
+            if d_results.has_key(user):
+                d_results[user].append(jratio)
+            elif not d_results.has_key(user):
+                d_results[user] = [jratio]
+    return d_results
 
-    return l_range1, l_range2, l_range3, l_range4, l_range5
-
-#build_list(args.infile)
 l_jobs      = read_tsv(args.infile)
-d_userjobs  = make_user_dicts(l_jobs)
-d_user_badjobs  = {}
-for user in d_userjobs.keys():
-    d_user_badjobs[user]    = read_user_jobs(d_userjobs[user])
+d_uresults  = make_user_dicts(l_jobs)
+mem_bins    = [0,0.1,0.5,0.8,1.0,float("inf")]
+print "user            -  <10%  - 10-49% - 50-79% - 80-99% - >100%"
+for user in sorted(d_uresults.keys()):
+    u_result    = np.histogram(d_uresults[user], bins=mem_bins)
+    if sum(u_result[0]) > 10:
+        print "%-15s - %-6d - %-6d - %-6d - %-6d - %-6d" % (user, u_result[0][0], u_result[0][1], u_result[0][2], u_result[0][3], u_result[0][4])
 
-print "user         -  <10%  - 10-30% - 30-50% - 50-80% - >80%"
-for user in d_user_badjobs.keys():
-    n1 = len(d_user_badjobs[user][0])
-    n2 = len(d_user_badjobs[user][1])
-    n3 = len(d_user_badjobs[user][2])
-    n4 = len(d_user_badjobs[user][3])
-    n5 = len(d_user_badjobs[user][4])
-    if sum([n1,n2,n3,n4,n5]) > 10:
-        print "%-12s - %-6d - %-6d - %-6d - %-6d - %-6d" % (user, n1, n2, n3, n4, n5)
+#d_user_badjobs  = {}
+#for user in d_userjobs.keys():
+#    d_user_badjobs[user]    = read_user_jobs(d_userjobs[user])
+#
+#print "user         -  <10%  - 10-30% - 30-50% - 50-80% - 80-100% - >100%"
+#for user in d_user_badjobs.keys():
+#    n1 = len(d_user_badjobs[user][0])
+#    n2 = len(d_user_badjobs[user][1])
+#    n3 = len(d_user_badjobs[user][2])
+#    n4 = len(d_user_badjobs[user][3])
+#    n5 = len(d_user_badjobs[user][4])
+#    n6 = len(d_user_badjobs[user][5])
+#    if sum([n1,n2,n3,n4,n5,n6]) > 10:
+#        print "%-12s - %-6d - %-6d - %-6d - %-6d - %-6d - %-6d" % (user, n1, n2, n3, n4, n5, n6)
