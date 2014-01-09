@@ -32,7 +32,7 @@ parser = argparse.ArgumentParser(description=usage_info, formatter_class=argpars
 parser.add_argument('--infile',
                 type=str,
                 dest='infile',
-                help='input file (required)')
+                help='input file (required) (for multiple files, use a quoted, space separated list)')
 
 parser.add_argument('--minjobs',
                 type=int,
@@ -52,21 +52,29 @@ parser.add_argument('--nodefault',
                 help='don\'t display jobs with default memory reservation (optional)')
 
 args = parser.parse_args()
-if args.infile and not os.path.isfile(args.infile):
-    print "%s isn't a file!" % args.infile
-    exit(1)
 
-def read_tsv(input_file):
+l_infiles   = args.infile.split(" ")
+
+for infile in l_infiles:
+    if infile and not os.path.isfile(infile):
+        print "%s isn't a file!" % infile
+        exit(1)
+
+def read_tsv(l_infiles):
     '''read in the data, generate a list'''
-    input_fh    = open(input_file, "r")
-    reader      = csv.reader(input_fh, delimiter="\t")
-    l_jobs      = list(reader)
+    l_jobs      =   []
+    for infile in l_infiles:
+        input_fh    = open(infile, "r")
+        reader      = csv.reader(input_fh, delimiter="\t")
+        l_jobs.extend(list(reader)[1:])
+    print len(l_jobs)
     return l_jobs
 
 def make_user_dicts(list_of_jobs):
     '''create up to two keys per user with the calcuated usage ratio.  jobs within a reservation, get put into the user.default key'''
     d_results   = {}
-    for line in list_of_jobs[1:]:
+#    for line in list_of_jobs[1:]:
+    for line in list_of_jobs:
         jobid   = int(line[0])
         indexid = int(line[1])
         user    = str(line[2])
@@ -87,7 +95,7 @@ def make_user_dicts(list_of_jobs):
                 d_results[user] = [jratio]
     return d_results
 
-l_jobs      = read_tsv(args.infile)
+l_jobs      = read_tsv(l_infiles)
 d_uresults  = make_user_dicts(l_jobs)
 
 def print_results():
