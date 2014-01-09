@@ -31,6 +31,7 @@ parser = argparse.ArgumentParser(description=usage_info, formatter_class=argpars
 
 parser.add_argument('--infile',
                 type=str,
+                nargs='+',
                 dest='infile',
                 help='input file (required) (for multiple files, use a quoted, space separated list)')
 
@@ -53,7 +54,10 @@ parser.add_argument('--nodefault',
 
 args = parser.parse_args()
 
-l_infiles   = args.infile.split(" ")
+#print args.infile
+
+#l_infiles   = args.infile.split(" ")
+l_infiles   = args.infile
 
 for infile in l_infiles:
     if infile and not os.path.isfile(infile):
@@ -67,7 +71,7 @@ def read_tsv(l_infiles):
         input_fh    = open(infile, "r")
         reader      = csv.reader(input_fh, delimiter="\t")
         l_jobs.extend(list(reader)[1:])
-    print len(l_jobs)
+#    print len(l_jobs)
     return l_jobs
 
 def make_user_dicts(list_of_jobs):
