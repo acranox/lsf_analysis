@@ -17,7 +17,7 @@ import os
 import csv
 import numpy as np
 
-mem_bins    = [0,0.1,0.5,0.8,1.0,float("inf")]
+mem_bins    = [0,0.1,0.25,0.8,1.05,float("inf")]
 
 usage_info = '''usage: %s <options>
 at a minimum, specify --infile <file>''' % sys.argv[0]
@@ -39,6 +39,12 @@ parser.add_argument('--minjobs',
                 dest='minjobs',
                 default=10,
                 help='minimum number of jobs to display a line (default = 10) (optional)')
+
+parser.add_argument('--minrsv',
+                type=int,
+                dest='minrsv',
+                default=512,
+                help='minimum memory reservation to display results ( in MBs ) (optional)')
 
 parser.add_argument('--nodefault',
                 action="store_true",
@@ -73,7 +79,7 @@ def make_user_dicts(list_of_jobs):
                 d_results[user+".default"].append(jratio)
             elif not d_results.has_key(user+".default"):
                 d_results[user+".default"] = [jratio]
-        elif m_rsv > 524288:
+        elif m_rsv > args.minrsv*1024: 
             jratio  = (m_used/(m_rsv*n_cpu))
             if d_results.has_key(user):
                 d_results[user].append(jratio)
@@ -85,10 +91,10 @@ l_jobs      = read_tsv(args.infile)
 d_uresults  = make_user_dicts(l_jobs)
 
 def print_results():
-    print "user            -  <10%  - 10-49% - 50-79% - 80-99% - >100%"
+    print "user            -  <10%  - 10-25% - 25-79% - 80-105% - >105%"
     for user in sorted(d_uresults.keys()):
         u_result    = np.histogram(d_uresults[user], bins=mem_bins)
         if sum(u_result[0]) > args.minjobs:
-            print "%-15s - %-6d - %-6d - %-6d - %-6d - %-6d" % (user, u_result[0][0], u_result[0][1], u_result[0][2], u_result[0][3], u_result[0][4])
+            print "%-15s - %-6d - %-6d - %-6d - %-6d  - %-6d" % (user, u_result[0][0], u_result[0][1], u_result[0][2], u_result[0][3], u_result[0][4])
 
 print_results()
