@@ -33,7 +33,7 @@ parser.add_argument('--infile',
                 type=str,
                 nargs='+',
                 dest='infile',
-                help='input file (required) (for multiple files, use a quoted, space separated list)')
+                help='input file (required) (separate multiple files with spaces)')
 
 parser.add_argument('--minjobs',
                 type=int,
