@@ -19,8 +19,9 @@ import numpy as np
 
 mem_bins    = [0,0.1,0.25,0.8,1.05,float("inf")]
 
-usage_info = '''usage: %s <options>
-at a minimum, specify --infile <file>''' % sys.argv[0]
+usage_info = '''Display histograms of memory utilization.
+The --infile option is required.  All others are optional'''
+
 
 
 if len(sys.argv) <= 1:
@@ -32,25 +33,26 @@ parser = argparse.ArgumentParser(description=usage_info, formatter_class=argpars
 parser.add_argument('--infile',
                 type=str,
                 nargs='+',
+                required=True,
                 dest='infile',
-                help='input file (required) (separate multiple files with spaces)')
+                help='input file (separate multiple files with spaces)')
 
 parser.add_argument('--minjobs',
                 type=int,
                 dest='minjobs',
                 default=10,
-                help='minimum number of jobs to display a line (default = 10) (optional)')
+                help='minimum number of jobs to display a line (default = 10)')
 
 parser.add_argument('--minrsv',
                 type=int,
                 dest='minrsv',
                 default=512,
-                help='minimum memory reservation to display results ( in MBs ) (optional)')
+                help='minimum memory reservation to display results ( in MBs )')
 
 parser.add_argument('--nodefault',
                 action="store_true",
                 dest='nodefault',
-                help='don\'t display jobs with default memory reservation (optional)')
+                help='don\'t display jobs with default memory reservation')
 
 args = parser.parse_args()
 
