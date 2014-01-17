@@ -150,10 +150,10 @@ def print_results():
 #print d_uusers['cp172']['y']
 
 def make_plot():
-    d_colors    = {'r':[],'o':[],'y':[],'g':[],'p':[]}
-    d_x    = {'r':[],'o':[],'y':[],'g':[],'p':[]}
-    d_y    = {'r':[],'o':[],'y':[],'g':[],'p':[]}
     for user in sorted(d_uusers.keys()):
+        d_colors    = {'r':[],'o':[],'y':[],'g':[],'p':[]}
+        d_x    = {'r':[],'o':[],'y':[],'g':[],'p':[]}
+        d_y    = {'r':[],'o':[],'y':[],'g':[],'p':[]}
         if d_uusers[user][user] > args.minjobs:
             for color in d_colors.keys():
                 for coords in d_uusers[user][color]:
