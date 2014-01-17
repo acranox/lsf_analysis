@@ -90,7 +90,6 @@ def make_user_dicts(list_of_jobs):
     '''create up to two keys per user with the calcuated usage ratio.  jobs within a reservation, get put into the user.default key'''
     d_users     = {}
     d_results   = {}
-    d_graphs    = {}
 #    for line in list_of_jobs[1:]:
     for line in list_of_jobs:
         jobid   = int(line[0])
@@ -111,22 +110,35 @@ def make_user_dicts(list_of_jobs):
                 d_results[user].append(jratio)
             elif not d_results.has_key(user):
                 d_results[user] = [jratio]
+        if not d_users.has_key(user): 
+            d_users[user]      = {user:0,'r':[],'o':[],'y':[],'g':[],'p':[]}
         if d_users.has_key(user) and m_rsv > args.minrsv*1024: 
-            d_users[user]      += 1
-            d_graphs[user+".x"].append(m_rsv/1048576.0)
-            d_graphs[user+".y"].append((m_used/1048576.0)*n_cpu)
-        elif not d_users.has_key(user): 
-            d_users[user]      = 0
-            d_graphs[user+".x"] = [m_rsv/1048576.0]
-            d_graphs[user+".y"] = [(m_used/1048576.0)*n_cpu]
+            d_users[user][user]   += 1
+            coords          = "%0.1f,%0.1f" % (((m_rsv*n_cpu)/1048576.0),m_used/1048576.0)
+#            print jratio
+#            print coords
+            if jratio <= 0.1:
+                if coords not in d_users[user]['r']:
+                    d_users[user]['r'] += [coords]
+            elif jratio > 0.1 and jratio <= 0.25:
+                if coords not in d_users[user]['o']:
+                    d_users[user]['o'] += [coords]
+            elif jratio > 0.25 and jratio <= 0.8:
+                if coords not in d_users[user]['y']:
+                    d_users[user]['y'] += [coords]
+            elif jratio > 0.8 and jratio <= 1.05:
+                if coords not in d_users[user]['g']:
+                    d_users[user]['g'] += [coords]
+            elif jratio > 1.05:
+                if coords not in d_users[user]['p']:
+                    d_users[user]['p'] += [coords]
 
-    return d_users, d_results, d_graphs
+    return d_users, d_results
 
 l_jobs      = read_tsv(l_infiles)
 d_udicts    = make_user_dicts(l_jobs)
 d_uusers    = d_udicts[0]
 d_uresults  = d_udicts[1]
-d_ugraphs   = d_udicts[2]
 
 def print_results():
     print "user            -  <10%  - 10-25% - 25-79% - 80-105% - >105%"
@@ -135,20 +147,33 @@ def print_results():
         if sum(u_result[0]) > args.minjobs:
             print "%-15s - %-6d - %-6d - %-6d - %-6d  - %-6d" % (user, u_result[0][0], u_result[0][1], u_result[0][2], u_result[0][3], u_result[0][4])
 
+#print d_uusers['cp172']['y']
+
 def make_plot():
+    d_colors    = {'r':[],'o':[],'y':[],'g':[],'p':[]}
+    d_x    = {'r':[],'o':[],'y':[],'g':[],'p':[]}
+    d_y    = {'r':[],'o':[],'y':[],'g':[],'p':[]}
     for user in sorted(d_uusers.keys()):
-        if d_uusers[user] > args.minjobs:
-            x   = d_ugraphs[user+".x"]
-            y   = d_ugraphs[user+".y"]
+        if d_uusers[user][user] > args.minjobs:
+            for color in d_colors.keys():
+                for coords in d_uusers[user][color]:
+                    d_colors[color] = coords.split(',')
+                    d_x[color].append(d_colors[color][0])
+                    d_y[color].append(d_colors[color][1])
             plot_file   = "./graphs/"+user+".png"
             plt.figure(0)
-            plt.ylabel("Memory used")
-            plt.xlabel("Memory reserved")
+            plt.ylabel("Memory used (GB)")
+            plt.xlabel("Memory reserved (GB)")
+            plt.suptitle("Memory usage for "+user)
             plt.grid(True)
-            plt.scatter(x,y,c='b',marker='.')
+            plt.scatter(d_x['r'],d_y['r'],c='r',marker='o')
+            plt.scatter(d_x['o'],d_y['o'],c='#ffa500',marker='o')
+            plt.scatter(d_x['y'],d_y['y'],c='y',marker='o')
+            plt.scatter(d_x['g'],d_y['g'],c='g',marker='o')
+            plt.scatter(d_x['p'],d_y['p'],c='m',marker='o')
             plt.plot([0,100],[0,100])
-            plt.xlim(0,max(y))
-            plt.ylim(0,max(y))
+            plt.xlim(0,100)
+            plt.ylim(0,100)
             plt.draw()
             plt.savefig(plot_file, dpi=300)
             plt.close()
