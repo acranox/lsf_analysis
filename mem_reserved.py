@@ -164,7 +164,7 @@ def make_plot():
             plt.figure(0)
             plt.ylabel("Memory used (GB)")
             plt.xlabel("Memory reserved (GB)")
-            plt.suptitle("Memory usage for "+user)
+            plt.suptitle("Memory usage for %s \n red=<10%% orange=10-25%% yellow=25-80%% green=80-105%% magenta=>105%%" % user)
             plt.grid(True)
             plt.scatter(d_x['r'],d_y['r'],c='r',marker='o')
             plt.scatter(d_x['o'],d_y['o'],c='#ffa500',marker='o')
