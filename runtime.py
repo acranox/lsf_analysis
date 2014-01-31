@@ -4,8 +4,14 @@
 # Peter Doherty, peter_doherty@hms.harvard.edu
 # Oct 3 2013
 
+#
+# 699765  der3    2       0       all_1d  491632  0       3028.169189     99.87365        1       44524   0       3032    0       0       0       nojobdepend
+#
+# jobid,user,stat_changes,exitStatus,queue,mem_used,mem_reserved,cpu_used,efficiency,num_cpus,pend_time,psusp_time,run_time,ususp_time,ssusp_time,unkwn_time
+#
 #        jobid           = pos[0]
 #        user            = pos[1]
+#        stat_changes    = pos[2]
 #        exitstatus      = pos[2]
 #        queue           = pos[3]
 #        mem_used        = pos[4]
@@ -43,6 +49,8 @@ parser = argparse.ArgumentParser(description=usage_info, formatter_class=argpars
 
 parser.add_argument('--infile',
                 type=str,
+                nargs='+',
+                required=True,
                 dest='infile',
                 help='input file (required)')
 
@@ -128,9 +136,12 @@ parser.add_argument('--debug',
 
 args = parser.parse_args()
 
-if args.infile and not os.path.isfile(args.infile):
-    print "%s isn't a file!" % args.infile
-    exit(1)
+l_infiles = args.infile
+
+for infile in l_infiles:
+    if infile and not os.path.isfile(infile):
+        print "%s isn't a file!" % infile
+        exit(1)
 
 # Load MatPlotLib if we're going to use it, and set the backend appropriately
 if args.savegraphs and not args.showgraphs:
@@ -151,20 +162,21 @@ d_queues   = {
 d_pos = {
     'jobid':    [0,'int'],
     'user':     [1,'str'],
-    'exit':     [2,'int'],
-    'queue':    [3,'str'],
-    'm_used':   [4,'makeintorzero'],
-    'm_rsv':    [5,'mungemrsv'],
-    'c_used':   [6,'float'],
-    'eff':      [7,'float'],
-    'n_cpu':    [8,'int'],
-    'pend_t':   [9,'int'],
-    'psusp_t':  [10,'int'],
-    'run_t':    [11,'int'],
-    'ususp_t':  [12,'int'],
-    'ssusp_t':  [13,'int'],
-    'unkwn_t':  [14,'int'],
-    'dep':      [15,'str']
+    'st_chg':   [2,'int'],
+    'exit':     [3,'int'],
+    'queue':    [4,'str'],
+    'm_used':   [5,'makeintorzero'],
+    'm_rsv':    [6,'mungemrsv'],
+    'c_used':   [7,'float'],
+    'eff':      [8,'float'],
+    'n_cpu':    [9,'int'],
+    'pend_t':   [10,'int'],
+    'psusp_t':  [11,'int'],
+    'run_t':    [12,'int'],
+    'ususp_t':  [13,'int'],
+    'ssusp_t':  [14,'int'],
+    'unkwn_t':  [15,'int'],
+    'dep':      [16,'str']
 }
 
 # Dictionary with the parameters for the various graphs.
@@ -215,75 +227,78 @@ def make_out_fn(out_fn):
         out_fn      = args.outdir+"/"+out_fn
     return out_fn
 
-def create_filtered_list(datafile,d_args):
+def create_filtered_list(l_datafiles,d_args):
     '''Create a list from the input file, filterd based on arguments'''
     gc.disable()
-    input_fn        = datafile
-    input_fh        = open(input_fn, "r")
     d_filt_result   = {'jobs':[]}
     u_list          = []
     q_list          = []
     q_regex         = False
-    # create default args, and parse the rest
-    if d_args['u']:
-        unames = d_args['u'].split(",")
-    else:
-        unames = []
-    if d_args['q'] and d_args['q'] == "contrib":
-        qnames   = d_queues['contrib']
-    elif d_args['q'] and d_args['q'] == "shared":
-        qnames   = d_queues['shared']
-    elif d_args['q'] and d_args['q'][-1] == '*':
-        q_regex = True
-        q_pattern = d_args['q'][:-1] 
-        qnames = d_args['q'].split(",")
-    elif d_args['q']:
-        qnames = d_args['q'].split(",")
-    else:
-        qnames = []
-    if d_args['minrun']:
-        minrun = d_args['minrun']
-    else:
-        minrun = 0
-    if d_args['maxrun']:
-        maxrun = d_args['maxrun']
-    else:
-        maxrun = sys.maxint
-      
-    for row in input_fh:
-        line            = row.split(None) 
-        user            = str(line[1])
-        exitstatus      = int(line[2])
-        queue           = str(line[3])
-        run_t           = int(line[11])
-        depend          = str(line[15])
-        u_list.append(user)
-        q_list.append(queue)
-        if user in unames or not unames:
-            ufilt = True
-        else:  
-            ufilt = False
-        if queue in qnames or not qnames:
-            qfilt = True
-        elif q_regex and queue.startswith(q_pattern):
-            qfilt = True
+    for datafile in l_datafiles:
+        input_fn        = datafile
+        input_fh        = open(input_fn, "r")
+        # create default args, and parse the rest
+        if d_args['u']:
+            unames = d_args['u'].split(",")
         else:
-            qfilt = False
-        if d_args['exitzero'] and exitstatus != 0:
-            exfilt = False
+            unames = []
+        if d_args['q'] and d_args['q'] == "contrib":
+            qnames   = d_queues['contrib']
+        elif d_args['q'] and d_args['q'] == "shared":
+            qnames   = d_queues['shared']
+        elif d_args['q'] and d_args['q'][-1] == '*':
+            q_regex = True
+            q_pattern = d_args['q'][:-1] 
+            qnames = d_args['q'].split(",")
+        elif d_args['q']:
+            qnames = d_args['q'].split(",")
         else:
-            exfilt = True
-        if d_args['nojobdepend'] and depend != 'nojobdepend':
-            depfilt = False
+            qnames = []
+        if d_args['minrun']:
+            minrun = d_args['minrun']
         else:
-            depfilt = True
-
-        if ufilt and qfilt and exfilt and depfilt and run_t >= minrun and run_t <= maxrun:
-                d_filt_result['jobs'].append(line)
-    d_filt_result['u'] = list(set(u_list))
-    d_filt_result['q'] = list(set(q_list))
- 
-    input_fh.close()
+            minrun = 0
+        if d_args['maxrun']:
+            maxrun = d_args['maxrun']
+        else:
+            maxrun = sys.maxint
+          
+        for row in input_fh:
+            line            = row.split(None) 
+            user            = str(line[1])
+            exitstatus      = int(line[3])
+            queue           = str(line[4])
+            c_used          = float(line[7])
+            eff             = float(line[8])
+            run_t           = int(line[12])
+            depend          = str(line[16])
+            u_list.append(user)
+            q_list.append(queue)
+            if user in unames or not unames:
+                ufilt = True
+            else:  
+                ufilt = False
+            if queue in qnames or not qnames:
+                qfilt = True
+            elif q_regex and queue.startswith(q_pattern):
+                qfilt = True
+            else:
+                qfilt = False
+            if d_args['exitzero'] and exitstatus != 0:
+                exfilt = False
+            else:
+                exfilt = True
+            if d_args['nojobdepend'] and depend != 'nojobdepend':
+                depfilt = False
+            else:
+                depfilt = True
+    
+            if ufilt and qfilt and exfilt and depfilt and run_t >= minrun and run_t <= maxrun and eff < 2000.0 and c_used < 31536000.0:
+                    d_filt_result['jobs'].append(line)
+        d_filt_result['u'] = list(set(u_list))
+        d_filt_result['q'] = list(set(q_list))
+     
+        input_fh.close()
     gc.enable()
     return d_filt_result
 
@@ -297,16 +312,16 @@ def calc(data_bin):
         u       = line[1]
 #        exit    = line[2]
 #        q       = line[3]
-        m_used  = makeintorzero(line[4])
-        m_rsv   = mungemrsv(int(line[5]))
-        c_used  = float(line[6])
-        eff     = int(float(line[7]))
-        n_cpu   = int(line[8])
-        pend_t  = int(line[9])
-        psusp_t = int(line[10])
-        run_t   = int(line[11])
-        ususp_t = int(line[12])
-        ssusp_t = int(line[13])
+        m_used  = makeintorzero(line[5])
+        m_rsv   = mungemrsv(int(line[6]))
+        c_used  = float(line[7])
+        eff     = int(float(line[8]))
+        n_cpu   = int(line[9])
+        pend_t  = int(line[10])
+        psusp_t = int(line[11])
+        run_t   = int(line[12])
+        ususp_t = int(line[13])
+        ssusp_t = int(line[14])
 #        unk_t   = line[14]
 #        dep     = line[15]
         d_calc['cpu_usage'].append(c_used/3600.0)
@@ -350,7 +365,7 @@ def create_dict(l_parsed):
     u_dict  = {}
     for line in l_parsed:
         u       = str(line[1])
-        q       = str(line[3])
+        q       = str(line[4])
         if q_dict.has_key(q):
             q_dict[q].append(line)
         elif not q_dict.has_key(q):
