@@ -192,15 +192,16 @@ d_figs = {
     'eff': [5,'hist','efficiency','Number of Jobs','Job Efficiency ((CPU Usage*Cores)/RunTime)','Histogram of Job Efficiency',range(10,500,20),False,False],
     'memdelta': [6,'hist','mem_delta','Number of Jobs','(Mem. Reserved) - (Mem. Used)','Histogram of Memory Efficiency',range(-8,64,2),False,False],
     'memscat': [7,'scatter','mem_scat','Mem. Used (MB)','Mem. Reserved (MB)','Scatter Plot of Memory Efficiency',False,False,False],
-    'runpct': [8,'hist','runpct','Number of Jobs','Run / Total','Histogram of Percent of time spent in RUN',range(0,500,10),False,False],
-    'susppct': [9,'hist','susppct','Number of Jobs','Susp+Run / Run ','Histogram of Percent of time spent in SSUSP',range(0,500,10),False,False]
+    'runpct': [8,'hist','runpct','Number of Jobs','Run / Total','Histogram of Percent of time spent in RUN',range(0,100,10),False,False],
+    'susppct': [9,'hist','susppct','Number of Jobs','Susp+Run / Run ','Histogram of Percent of time spent in SSUSP',range(0,100,10),False,False],
+    'pendpct': [9,'hist','pendpct','Number of Jobs','Pend+Run / Run ','Histogram of Percent of time spent in PEND',range(0,100,10),False,False]
     }
 
 # Dictionary for groups of graphs, to simplify argument handling.
 d_fig_groups = {
     'cpu': ['cpu_usage','runtime','ncpu','eff'],
     'memory': ['mem_reserved','mem_used','memdelta','memscat'],
-    'suspend': ['runpct','susppct']
+    'suspend': ['runpct','susppct','pendpct']
     }
 
 def makeintorzero(v):
@@ -324,8 +325,8 @@ def calc(data_bin):
         run_t   = int(line[12])
         ususp_t = int(line[13])
         ssusp_t = int(line[14])
-#        unk_t   = line[14]
-#        dep     = line[15]
+#        unk_t   = line[15]
+        dep     = line[16]
         d_calc['cpu_usage'].append(c_used/3600.0)
         d_calc['runtime'].append(run_t)
         d_calc['mem_reserved'].append(m_rsv*n_cpu)
@@ -337,6 +338,8 @@ def calc(data_bin):
         if run_t > 0:
             d_calc['runpct'].append(float(run_t)/float(pend_t+psusp_t+ususp_t+ssusp_t+run_t)*100)
             d_calc['susppct'].append(float(ssusp_t)/(ssusp_t+run_t)*100)
+            if dep != 'nojobdepend':
+                d_calc['pendpct'].append(float(ssusp_t)/(ssusp_t+run_t)*100)
     gc.enable()
     return d_calc
 
@@ -415,7 +418,17 @@ def draw_hist(l_input,user,l_result,save):
     plt.xlabel(figxlab)
     plt.grid(True)
     plt.suptitle(figtit)
-    plt.hist(figdata, bins=figbins, normed=fignorm)
+    counts, bins, patches = plt.hist(figdata, bins=figbins, normed=fignorm)
+    plt.xticks(bins)
+    bin_centers = 0.5 * np.diff(bins) + bins[:-1]
+    for label, x in zip(counts,bin_centers):
+        plt.annotate(label, xy=(x-2, label+10), xycoords=('data', 'axes fraction'), xytext=None, textcoords='data', va='bottom', ha='left')
+#        plt.annotate(label, xy=(x, label), xycoords=('data', 'axes fraction'), xytext=None, textcoords='data', va='top', ha='center')
+#    bin_centers = 0.5 * np.diff(bins) + bins[:-1]
+#    for count, x in zip(counts, bin_centers):
+#        percent = '%0.0f%%' % (100 * float(count) / counts.sum())
+#        ax.annotate(percent, xy=(x, 0), xycoords=('data', 'axes fraction'), xytext=(0, 100), textcoords='offset points', va='top', ha='center')
+    #plt.hist(figdata, bins=figbins, normed=fignorm)
     plt.draw()
     if save:
         plt.savefig(figfile, dpi=300)
