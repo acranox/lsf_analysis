@@ -56,13 +56,15 @@ parser.add_argument('--infile',
 
 parser.add_argument('--users',
                 type=str,
+                nargs='+',
                 dest='u',
-                help='list of users (comma separated)')
+                help='list of users (space separated)')
 
 parser.add_argument('--queues',
                 type=str,
+                nargs='+',
                 dest='q',
-                help='''Either: a list of queues (comma separated)
+                help='''Either: a list of queues (space separated)
 or one(1) of: contrib,shared,all
 or a queue name with a wildcard as the last character, ie: sysbio*''')
 
@@ -239,7 +241,7 @@ def create_filtered_list(l_datafiles,d_args):
         input_fh        = open(input_fn, "r")
         # create default args, and parse the rest
         if d_args['u']:
-            unames = d_args['u'].split(",")
+            unames = d_args['u']
         else:
             unames = []
         if d_args['q'] and d_args['q'] == "contrib":
@@ -249,9 +251,9 @@ def create_filtered_list(l_datafiles,d_args):
         elif d_args['q'] and d_args['q'][-1] == '*':
             q_regex = True
             q_pattern = d_args['q'][:-1] 
-            qnames = d_args['q'].split(",")
+            qnames = d_args['q']
         elif d_args['q']:
-            qnames = d_args['q'].split(",")
+            qnames = d_args['q']
         else:
             qnames = []
         if d_args['minrun']:
