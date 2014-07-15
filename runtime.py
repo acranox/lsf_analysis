@@ -38,7 +38,7 @@ import sys
 import time
 
 usage_info = '''usage: %s <options>
-        at a minimum, specify --infile <file.out>''' % sys.argv[0] 
+        at a minimum, specify --infile <file.tsv>''' % sys.argv[0] 
 
 
 if len(sys.argv) <= 1:
